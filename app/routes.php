@@ -11,7 +11,20 @@
 |
 */
 
-Route::get('/', function() use ($app)
+Route::group(array('before' => 'auth'), function()
 {
-    return View::make('hello');
+    Route::get('/', function()
+    {
+        return View::make('hello');
+    });
+
+    Route::get('user/profile', function()
+    {
+        // Has Auth Filter
+    });
 });
+
+
+Route::get('login', 'LoginController@showLoginForm');
+
+Route::post('login', 'LoginController@handleLoginForm');

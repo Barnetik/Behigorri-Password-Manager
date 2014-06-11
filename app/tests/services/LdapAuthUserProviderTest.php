@@ -3,23 +3,15 @@
 class LdapAuthUserProviderTest extends TestCase {
 
     private $userProvider;
-    const VALID_USER = 'testuser';
-    const VALID_PASS = 'testpassword';
-    const LDAP_SERVER = 'ldap://ad.example.com';
-    const LDAP_IDENTIFIER = 'uid';
-    const LDAP_BASE_DN = 'ou=Employees,dc=example,dc=com';
+    const VALID_USER = '***REMOVED***';
+    const VALID_PASS = '***REMOVED***';
+    const INVALID_USER = 'wrongUser';
+    const INVALID_PASS = 'wrongPass';
 
     public function setUp()
     {
         parent::setUp();
-        $config = array(
-            'ldap' => array(
-                'hostname' => self::LDAP_SERVER,
-                'identifier' => self::LDAP_IDENTIFIER,
-                'base_dn' => self::LDAP_BASE_DN
-            )
-        );
-        $this->userProvider = new \Service\LdapAuthUserProvider($config);
+        $this->userProvider = new \Service\LdapAuthUserProvider($this->app->config);
     }
     
     public function testLdapAuthUserProviderIsInstanceable()
@@ -43,6 +35,16 @@ class LdapAuthUserProviderTest extends TestCase {
         $this->assertEquals(self::VALID_USER, $user->getAuthIdentifier());
     }
 
+    public function testRetrieveByCredentialsWithInValidDataReturnsNull()
+    {
+        $credentials = array(
+            'username' => 'invalidUser',
+            'password' => 'invalidPass'
+        );
+        $user = $this->userProvider->retrieveByCredentials($credentials);
+        $this->assertNull($user);
+    }
+    
     public function testRetrievedUserValidatesCredentials()
     {
         $credentials = array(
@@ -53,14 +55,11 @@ class LdapAuthUserProviderTest extends TestCase {
         $this->assertTrue($this->userProvider->validateCredentials($user, $credentials));
     }
 
-    public function testRetrieveByCredentialsWithInValidDataReturnsNull()
+    public function testRetrieveByIdReturnsValidUser()
     {
-        $credentials = array(
-            'username' => 'invalidUser',
-            'password' => 'invalidPass'
-        );
-        $user = $this->userProvider->retrieveByCredentials($credentials);
-        $this->assertNull($user);
+        $user = $this->userProvider->retrieveById(self::VALID_USER);
+        $this->assertInstanceOf('\\Illuminate\\Auth\\UserInterface', $user);
+        $this->assertEquals(self::VALID_USER, $user->getAuthIdentifier());
     }
     
     public function testLdapAuthProviderIsWorking()

@@ -34,6 +34,10 @@ class Ldap {
         if (!isset($config['hostname'])) {
             throw new \Exception('Ldap hostname is required');
         }
+
+        if (!isset($config['bind_dn']) || !isset($config['bind_pass'])) {
+            throw new \Exception('A bind user and password must be provided');
+        }
         
         if (isset($config['port'])) {
             $this->ldap = @ldap_connect($config['hostname'], $config['port']);
@@ -41,9 +45,14 @@ class Ldap {
             $this->ldap = @ldap_connect($config['hostname']);
         }
         ldap_set_option($this->ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
+
+        $bind = @ldap_bind($this->ldap, $config['bind_dn'], $config['bind_pass']);
+        if (!$bind) {
+            throw new \Exception('Could not bind to LDAP server');
+        }
     }
     
-    public function authenticate($credentials) 
+    public function getById($id) 
     {
         $identifier = 'uid';
         
@@ -55,26 +64,35 @@ class Ldap {
             throw new \Exception('Ldap base_dn is required');
         }
         
-        $rdn = sprintf('%s=%s,%s', $identifier, $credentials['username'], $this->config['base_dn']);
-        $bind = @ldap_bind($this->ldap, $rdn, $credentials['password']);
-        if ($bind) {
-            $result = @ldap_read($this->ldap, $rdn, 'objectClass=*');
-            $entries = @ldap_get_entries($this->ldap, $result);
-            
-            return $this->getUser($entries[0], $credentials);
+        $rdn = sprintf('%s=%s,%s', $identifier, $id, $this->config['base_dn']);
+        $result = @ldap_read($this->ldap, $rdn, 'objectClass=*');
+
+        if ($result === false) {
+            return null;
         }
+        
+        $entries = @ldap_get_entries($this->ldap, $result);
+        if ($entries['count'] > 0) {
+            return $this->getUser($entries[0]);
+        }
+        
         return null;
     }
     
-    private function getUser($userEntry, $credentials)
+    private function getUser($userEntry)
     {
         return new GenericUser(array(
-            'id' => $credentials['username'],
+            'id' => $userEntry['uid'][0],
             'password' => $userEntry['userpassword'][0],
             'name' => $userEntry['givenname'][0],
             'surname' => $userEntry['sn'][0],
             'mail' => $userEntry['mail'][0],
-            'dn' => $userEntry['dn'][0]
+            'dn' => $userEntry['dn']
         ));
+    }
+    
+    public function validateCredentials($user, $credentials)
+    {
+        return @ldap_bind($this->ldap, $user->dn, $credentials['password']);
     }
 }
