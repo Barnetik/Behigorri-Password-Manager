@@ -82,6 +82,6 @@ require app_path().'/filters.php';
 
 
 Auth::extend('ldap', function($app) {
-    return new \Service\LdapAuthUserProvider($app->config);
-    return new \Illuminate\Auth\Guard($provider, $app['session']);
+    $provider = new \Service\LdapAuthUserProvider($app->config);
+    return new \Illuminate\Auth\Guard($provider, $app['session.store']);
 });

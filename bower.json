@@ -1,0 +1,21 @@
+{
+  "name": "behigorri",
+  "version": "0.1",
+  "homepage": "https://github.com/BarnetikKoop/behigorri",
+  "authors": [
+    "Alayn Gortazar <alayn@barnetik.com>"
+  ],
+  "description": "An Online Password Manager",
+  "license": "GPLv2",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "public/bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "bootstrap": "~3.1.1"
+  }
+}

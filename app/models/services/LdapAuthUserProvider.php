@@ -33,17 +33,16 @@ class LdapAuthUserProvider implements \Illuminate\Auth\UserProviderInterface
     
     public function retrieveByCredentials(array $credentials) 
     {
-        return $this->ldap->authenticate($credentials);
+        return $this->ldap->getById($credentials['username']);
     }
 
     public function retrieveById($identifier) 
     {
-        
+        return $this->ldap->getById($identifier);
     }
 
     public function retrieveByToken($identifier, $token) 
     {
-        
     }
 
     public function updateRememberToken(\Illuminate\Auth\UserInterface $user, $token) 
@@ -53,11 +52,6 @@ class LdapAuthUserProvider implements \Illuminate\Auth\UserProviderInterface
 
     public function validateCredentials(\Illuminate\Auth\UserInterface $user, array $credentials) 
     {
-        $credUser = $this->ldap->authenticate($credentials);
-        if ($credUser) {
-            return $credUser->getAuthIdentifier() === $user->getAuthIdentifier();
-        }
-        
-        return false;
+        return $this->ldap->validateCredentials($user, $credentials);
     }
 }
