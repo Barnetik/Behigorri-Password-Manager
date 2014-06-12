@@ -3,8 +3,8 @@
 class LdapAuthUserProviderTest extends TestCase {
 
     private $userProvider;
-    const VALID_USER = '***REMOVED***';
-    const VALID_PASS = '***REMOVED***';
+    const VALID_USER = 'user';
+    const VALID_PASS = 'password';
     const INVALID_USER = 'wrongUser';
     const INVALID_PASS = 'wrongPass';
 
