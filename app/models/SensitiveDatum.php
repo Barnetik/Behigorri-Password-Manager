@@ -3,13 +3,16 @@ use Service\Gnupg;
 
 class SensitiveDatum extends \Eloquent 
 {
-    protected $fillable = [];
+    public $guarded = [];
+    protected $table = 'sensitiveDatas';
     public $encrypted = false;
     protected $gnupg;
+    protected $role;
 
-    public function __construct(Gnupg $gnupg) 
+    public function __construct(array $attributes = array()) 
     {
-        $this->gnupg = $gnupg;
+        parent::__construct($attributes);
+        $this->gnupg = App::make('Gnupg');
     }
 
     public static function boot()
@@ -20,24 +23,48 @@ class SensitiveDatum extends \Eloquent
                 $sensitiveDatum->encrypt();
             }
         });
-        SensitiveDatum::restoring(function(SensitiveDatum $sensitiveDatum) {
+        SensitiveDatum::registerModelEvent('restoring', function(SensitiveDatum $sensitiveDatum) {
             $sensitiveDatum->encrypted = true;
         });
     }
 
     public function encrypt()
     {
+        $this->gnupg->addEncryptKey($this->role->gpg_fingerprint);
         $this->value = $this->gnupg->encrypt($this->value);
+        $env = getenv("GNUPGHOME");
         $this->encrypted = true;
+        $this->gnupg->clearEncryptKeys();
+    }
+    
+    public function decrypt($password)
+    {
+        $this->value = $this->gnupg->decrypt($this->value, $password);
+        $this->encrypted = false;
     }
 
-    public function setEncryptedValue($value) {
+    public function setEncryptedValue($value) 
+    {
         $this->encrypted = true;
         $this->value = $value;
     }
 
-    public function isEncrypted() {
+    public function isEncrypted() 
+    {
         return $this->encrypted;
+    }
+    
+    public function setRole(\Role $role) 
+    {
+        $validator = Validator::make($role->toArray(), array(
+            'name' => 'alpha_dash'
+        ));
+        if ($validator->fails()) {
+            throw new \Exception('Wrong role name: ' . $validator->messages()->first('name'));
+        }
+        
+        putenv("GNUPGHOME=" . storage_path() . '/keys/' . $role->name);
+        $this->role = $role;
     }
 
 }

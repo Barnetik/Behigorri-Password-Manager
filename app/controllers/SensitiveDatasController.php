@@ -33,16 +33,28 @@ class SensitiveDatasController extends \BaseController {
 	public function store()
 	{
             $validator = Validator::make(Input::all(), array(
-                'name' => 'required|unique',
+//                'name' => 'required|unique:sensitiveDatas',
+                'name' => 'required',
                 'value' => 'required'
             ));
+            
             if ($validator->passes()) {
+                $role = $this->getCurrentRole();
                 $datum = App::make('SensitiveDatum');
                 $datum->fill(Input::all());
+                $datum->setRole($role);
                 $datum->save();
+            } else {
+                var_dump($validator->messages());
             }
             
+            $this->index();
 	}
+        
+        protected function getCurrentRole()
+        {
+            return Role::find(1);
+        }
 
 	/**
 	 * Display the specified resource.
