@@ -21,8 +21,8 @@
 namespace Service;
 
 /**
- * Description of Gnupg
- *
+ * Facade to real Gnupg (from extension) as there was no way to make decryption
+ * work properly. Implements only methods needed in Behigorri PM project.
  * @author alayn
  */
 class Gnupg {
@@ -40,6 +40,11 @@ class Gnupg {
         $this->gnupg->addEncryptKey($fingerprint);
     }
     
+    public function clearEncryptKeys()
+    {
+        $this->gnupg->clearEncryptKeys();
+    }
+    
     public function encrypt($data)
     {
         return $this->gnupg->encrypt($data);
@@ -52,7 +57,12 @@ class Gnupg {
     {
         $encFile = tempnam(sys_get_temp_dir(), '');
         file_put_contents($encFile, $encryptedData);
-        $command = sprintf('gpg --homedir %s --batch --passphrase %s --yes -d %s 2> /dev/null', getenv('GNUPGHOME'), $password, $encFile);
+        $command = sprintf(
+            'gpg --homedir %s --batch --passphrase %s --yes -d %s 2> /dev/null', 
+            escapeshellarg(getenv('GNUPGHOME')), 
+            escapeshellarg($password), 
+            escapeshellarg($encFile)
+        );
         $clearData = shell_exec($command);
         unlink($encFile);
         return $clearData;
