@@ -13,15 +13,12 @@
 
 Route::group(array('before' => 'auth'), function()
 {
-    Route::get('/', function()
-    {
-        return View::make('hello');
+    Route::get('/', function() {
+        return Redirect::to('sensitiveDatas');
     });
-
-    Route::get('user/profile', function()
-    {
-        // Has Auth Filter
-    });
+    
+    Route::resource('sensitiveDatas', 'SensitiveDatasController');
+    
 });
 
 

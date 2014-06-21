@@ -1,0 +1,1 @@
+/home/alayn/NetBeansProjects/behigorri/app/views/sensitiveDatas/show.blade.php
