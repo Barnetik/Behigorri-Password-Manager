@@ -53,6 +53,5 @@ class GnupgTest extends PHPUnit_Framework_TestCase {
         $encryptedData = $this->gnupg->encrypt('froga');
         $cleanData = $this->gnupg->decrypt($encryptedData, 'test');
         $this->assertEquals('froga', $cleanData);
-
     }
 }
