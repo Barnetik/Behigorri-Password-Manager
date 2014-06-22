@@ -63,8 +63,15 @@ class Gnupg {
             escapeshellarg($password), 
             escapeshellarg($encFile)
         );
-        $clearData = shell_exec($command);
+        
+        $aClearData = [];
+        $returnVar = null;
+        exec($command, $aClearData, $returnVar);
+        
+        if ($returnVar != 0) {
+            throw new \Exception('Data could not be decrypted');
+        }
         unlink($encFile);
-        return $clearData;
+        return implode("\n", $aClearData);
     }
 }
