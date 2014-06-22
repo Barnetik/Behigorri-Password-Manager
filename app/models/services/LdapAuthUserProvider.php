@@ -20,15 +20,16 @@
 
 namespace Service;
 
+use \Illuminate\Hashing\BcryptHasher;
 /**
  * @author Alayn Gortazar <alayn@barnetik.com>
  */
 class LdapAuthUserProvider implements \Illuminate\Auth\UserProviderInterface 
 {
-    public function __construct($config)
+    public function __construct($config, Ldap $ldap, BcryptHasher $hasher)
     {
-        $this->ldap = new Ldap($config['ldap']);
-        $this->hasher = new \Illuminate\Hashing\BcryptHasher();
+        $this->ldap = $ldap;
+        $this->hasher = $hasher;
     }
     
     public function retrieveByCredentials(array $credentials) 

@@ -81,7 +81,14 @@ App::down(function()
 require app_path().'/filters.php';
 
 
+App::bind('\\Service\\Ldap', function($app) {
+    return new \Service\Ldap($app->config['ldap']);
+});
+
 Auth::extend('ldap', function($app) {
-    $provider = new \Service\LdapAuthUserProvider($app->config);
+    $ldapService = new \Service\Ldap($app->config['ldap']);
+    $hasher = new \Illuminate\Hashing\BcryptHasher();
+    $provider = new \Service\LdapAuthUserProvider($app->config, $ldapService, $hasher);
     return new \Illuminate\Auth\Guard($provider, $app['session.store']);
 });
+
