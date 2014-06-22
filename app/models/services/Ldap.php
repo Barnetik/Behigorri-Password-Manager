@@ -21,12 +21,18 @@
 namespace Service;
 
 use Illuminate\Auth\GenericUser;
+use \Cache;
+
 /**
  * @author Alayn Gortazar <alayn@barnetik.com>
  */
-class Ldap {
+class Ldap 
+{
+    const CACHE_TIME = 10;
 
     private $config;
+    private $ldap;
+
 
     public function __construct($config)
     {
@@ -38,18 +44,24 @@ class Ldap {
         if (!isset($config['bind_dn']) || !isset($config['bind_pass'])) {
             throw new \Exception('A bind user and password must be provided');
         }
-        
-        if (isset($config['port'])) {
-            $this->ldap = @ldap_connect($config['hostname'], $config['port']);
-        } else {
-            $this->ldap = @ldap_connect($config['hostname']);
-        }
-        ldap_set_option($this->ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
+    }
+    
+    protected function getLdap()
+    {
+        if (!isset($this->ldap)) {
+            if (isset($this->config['port'])) {
+                $this->ldap = @ldap_connect($this->config['hostname'], $this->config['port']);
+            } else {
+                $this->ldap = @ldap_connect($this->config['hostname']);
+            }
+            ldap_set_option($this->ldap, LDAP_OPT_PROTOCOL_VERSION, 3);
 
-        $bind = @ldap_bind($this->ldap, $config['bind_dn'], $config['bind_pass']);
-        if (!$bind) {
-            throw new \Exception('Could not bind to LDAP server');
-        }
+            $bind = @ldap_bind($this->ldap, $this->config['bind_dn'], $this->config['bind_pass']);
+            if (!$bind) {
+                throw new \Exception('Could not bind to LDAP server');
+            }
+        }        
+        return $this->ldap;
     }
     
     public function getById($id) 
@@ -65,15 +77,19 @@ class Ldap {
         }
         
         $rdn = sprintf('%s=%s,%s', $identifier, $id, $this->config['base_dn']);
-        $result = @ldap_read($this->ldap, $rdn, 'objectClass=*');
-
-        if ($result === false) {
-            return null;
-        }
         
-        $entries = @ldap_get_entries($this->ldap, $result);
-        if ($entries['count'] > 0) {
-            return $this->getUser($entries[0]);
+        if (Cache::has($rdn)) {
+            return Cache::get($rdn);
+        }
+        $ldap = $this->getLdap();
+        $result = @ldap_read($ldap, $rdn, 'objectClass=*');
+        if ($result !== false) {
+            $entries = @ldap_get_entries($ldap, $result);
+            if ($entries['count'] > 0) {
+                $user = $this->getUser($entries[0]);
+                Cache::put($rdn, $user, self::CACHE_TIME);
+                return $user;
+            }
         }
         
         return null;
@@ -93,6 +109,6 @@ class Ldap {
     
     public function validateCredentials($user, $credentials)
     {
-        return @ldap_bind($this->ldap, $user->dn, $credentials['password']);
+        return @ldap_bind($this->getLdap(), $user->dn, $credentials['password']);
     }
 }
