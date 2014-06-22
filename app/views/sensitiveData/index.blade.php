@@ -31,7 +31,7 @@
 
                     <div class="controls">
                         <button type="submit" class="btn btn-primary input-medium pull-right">Send</button>
-                        <button class="btn btn-warning input-medium pull-right js-add-new-cancel">Cancel</button>
+                        <button type="reset" class="btn btn-warning input-medium pull-right js-add-new-cancel">Cancel</button>
                     </div>
                 </form>
             </div>

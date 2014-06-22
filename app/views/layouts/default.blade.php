@@ -12,13 +12,8 @@
     
     <base href="{{ URL::to('/') }}" />
     <body>
-        @section('sidebar')
-            This is the master sidebar.
-        @show
-
         <div class="container">
             {{ $content }}
         </div>
-
     </body>
 </html>
