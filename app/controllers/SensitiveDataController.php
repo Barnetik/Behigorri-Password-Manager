@@ -1,21 +1,26 @@
 <?php
 
-class SensitiveDatasController extends \BaseController {
+class SensitiveDataController extends \BaseController {
 
 	/**
 	 * Display a listing of the resource.
-	 * GET /sensitivedatas
+	 * GET /sensitivedata
 	 *
 	 * @return Response
 	 */
 	public function index()
 	{
-            $this->layout->content = View::make('sensitiveDatas.index');
+            $sensitiveData = SensitiveDatum::all();
+            $this->layout->content = View::make('sensitiveData.index')
+                ->with([
+                    'sensitiveData' => $sensitiveData
+                ]);
+            $this->layout->with('scripts', ['js/sensitiveData.js']);
 	}
 
 	/**
 	 * Show the form for creating a new resource.
-	 * GET /sensitivedatas/create
+	 * GET /sensitivedata/create
 	 *
 	 * @return Response
 	 */
@@ -26,21 +31,30 @@ class SensitiveDatasController extends \BaseController {
 
 	/**
 	 * Store a newly created resource in storage.
-	 * POST /sensitivedatas
+	 * POST /sensitivedata
 	 *
 	 * @return Response
 	 */
 	public function store()
 	{
             $validator = Validator::make(Input::all(), array(
-//                'name' => 'required|unique:sensitiveDatas',
+//                'name' => 'required|unique:sensitiveData',
                 'name' => 'required',
                 'value' => 'required'
             ));
             
             if ($validator->passes()) {
+                
+                if (Input::get('id')) {
+                    $datum = SensitiveDatum::find(Input::get('id'));
+                    if (!$datum) {
+                        throw new \Exception('The datum could not be retrieved');
+                    }
+                } else {
+                    $datum = App::make('SensitiveDatum');
+                }
+
                 $role = $this->getCurrentRole();
-                $datum = App::make('SensitiveDatum');
                 $datum->fill(Input::all());
                 $datum->setRole($role);
                 $datum->save();
@@ -51,6 +65,15 @@ class SensitiveDatasController extends \BaseController {
             $this->index();
 	}
         
+        public function decrypt()
+        {
+            $datum = SensitiveDatum::find(Input::get('id'));
+            $role = $this->getCurrentRole();
+            $datum->setRole($role);
+            $datum->decrypt(Input::get('password'));
+            return $datum->toJSON();
+        }
+        
         protected function getCurrentRole()
         {
             return Role::find(1);
@@ -58,7 +81,7 @@ class SensitiveDatasController extends \BaseController {
 
 	/**
 	 * Display the specified resource.
-	 * GET /sensitivedatas/{id}
+	 * GET /sensitivedata/{id}
 	 *
 	 * @param  int  $id
 	 * @return Response
@@ -70,7 +93,7 @@ class SensitiveDatasController extends \BaseController {
 
 	/**
 	 * Show the form for editing the specified resource.
-	 * GET /sensitivedatas/{id}/edit
+	 * GET /sensitivedata/{id}/edit
 	 *
 	 * @param  int  $id
 	 * @return Response
@@ -82,7 +105,7 @@ class SensitiveDatasController extends \BaseController {
 
 	/**
 	 * Update the specified resource in storage.
-	 * PUT /sensitivedatas/{id}
+	 * PUT /sensitivedata/{id}
 	 *
 	 * @param  int  $id
 	 * @return Response
@@ -94,7 +117,7 @@ class SensitiveDatasController extends \BaseController {
 
 	/**
 	 * Remove the specified resource from storage.
-	 * DELETE /sensitivedatas/{id}
+	 * DELETE /sensitivedata/{id}
 	 *
 	 * @param  int  $id
 	 * @return Response
