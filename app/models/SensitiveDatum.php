@@ -11,7 +11,7 @@ class SensitiveDatum extends \Eloquent
     public function __construct(array $attributes = array()) 
     {
         parent::__construct($attributes);
-        $this->gnupg = App::make('Gnupg');
+        $this->gnupg = App::make('\\Service\\Gnupg');
     }
 
     public static function boot()
