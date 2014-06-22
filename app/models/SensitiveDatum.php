@@ -4,7 +4,6 @@ use Service\Gnupg;
 class SensitiveDatum extends \Eloquent 
 {
     public $guarded = [];
-    protected $table = 'sensitiveDatas';
     public $encrypted = false;
     protected $gnupg;
     protected $role;
