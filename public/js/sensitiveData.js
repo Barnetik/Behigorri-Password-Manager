@@ -46,7 +46,8 @@ $(document).ready(function(){
     var addNewButton = $('.js-add-new');
     var newForm = $('.js-new-form');
     addNewButton.click(function() {
-        newForm.find('input').val();
+        newForm.find('input').val('');
+        newForm.find('textarea').val('');
         showNewForm();
     });
 
