@@ -51,6 +51,7 @@ $(document).ready(function(){
 
     var addNewCancelButton = $('.js-add-new-cancel');
     addNewCancelButton.click(function(e) {
+        resetNewForm();
         hideNewForm();
     });
     
@@ -62,5 +63,9 @@ $(document).ready(function(){
     var hideNewForm = function() {
         newForm.addClass('hidden');
         addNewButton.removeClass('hidden');
+    };
+    
+    var resetNewForm = function() {
+        newForm.find('input,textarea').val('');
     };
 });
