@@ -20,10 +20,12 @@ Route::group(array('before' => 'auth'), function()
     Route::post('/decrypt', 'SensitiveDataController@decrypt');
     
     Route::resource('sensitiveData', 'SensitiveDataController');
+
+    Route::get('/logout', 'LogoutController@logout');
     
 });
 
 
-Route::get('login', 'LoginController@showLoginForm');
+Route::get('/login', 'LoginController@showLoginForm');
 
-Route::post('login', 'LoginController@handleLoginForm');
+Route::post('/login', 'LoginController@handleLoginForm');
