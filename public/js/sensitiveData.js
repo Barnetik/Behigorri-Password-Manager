@@ -1,6 +1,18 @@
 $(document).ready(function(){
     var baseUrl = $('base').attr('href');
     
+    var showAlert = function(message, context) {
+        var alertWrapper = $('<div />').addClass('alert alert-warning alert-dismissable fade in');
+        alertWrapper.append(
+            $('<button />').attr('type', 'button').addClass('close').data('dismiss', 'alert').prop('aria-hidden', true).text("x")
+        );
+        alertWrapper.append(message);
+        context.prepend(alertWrapper);
+//        setTimeout(function() {
+//            alertWrapper.alert('close');
+//        }, 5000);
+    };
+    
     var idField = $('.js-decrypt-modal input[name=id]');
     var passwordField = $('.js-decrypt-modal input[name=password]');
     var submitButton = $('.js-decrypt-modal .js-submit');
@@ -26,6 +38,9 @@ $(document).ready(function(){
    
     submitButton.click(function() {
         if (passwordField.val() !== '') {
+            if (modal.find('.alert')) {
+                modal.find('.alert').alert('close');
+            }
             $.post(baseUrl + '/decrypt', {
                 id: idField.val(),
                 password: passwordField.val()
@@ -38,6 +53,7 @@ $(document).ready(function(){
                 modal.modal('hide');
             }).fail(function(data) {
                 var response = JSON.parse(data.responseText);
+                showAlert(response.error.message, modal.find('.modal-body'));
             });
         }
     });
