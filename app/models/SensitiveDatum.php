@@ -66,4 +66,8 @@ class SensitiveDatum extends \Eloquent
         $this->role = $role;
     }
 
+    public function user()
+    {
+        return $this->belongsTo('User');
+    }
 }

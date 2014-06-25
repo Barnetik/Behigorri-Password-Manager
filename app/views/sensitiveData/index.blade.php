@@ -1,11 +1,25 @@
 
 <div class="row">
     
-    <div class="col-xs-5">
+    <div class="col-xs-7">
+        <div class="row datum-row">
+            <div class="col-xs-6">
+                <strong>Description</strong>
+            </div>
+            <div class="col-xs-3 text-right">
+                <strong>Last update</strong>
+            </div>
+            <div class="col-xs-3">
+            </div>
+        </div>
+
         @foreach ($sensitiveData as $datum)
         <div id="datum-{{{ $datum->id }}}" data-model="{{{ $datum->toJSON() }}}" class="row datum-row">
-            <div class="col-xs-9 js-datum-name">
+            <div class="col-xs-6 js-datum-name">
                 {{{ $datum->name }}}
+            </div>
+            <div class="col-xs-3 text-right">
+                {{{ $datum->updated_at }}} ({{{ $datum->user->username }}})
             </div>
             <div class="col-xs-3">
                 <button class="js-decrypt btn btn-danger" data-datum-id="{{{ $datum->id }}}">decrypt</button>
@@ -14,7 +28,7 @@
         @endforeach
     </div>
     
-    <div class="col-xs-7">
+    <div class="col-xs-5">
         <div class="row">
             <button class="btn btn-success input-medium pull-right js-add-new">Add New</button>
         </div>

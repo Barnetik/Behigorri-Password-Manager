@@ -15,6 +15,7 @@ class SensitiveDataController extends \BaseController {
                 ->with([
                     'sensitiveData' => $sensitiveData
                 ]);
+            
             $this->layout->with('scripts', ['js/sensitiveData.js']);
 	}
 
@@ -57,6 +58,8 @@ class SensitiveDataController extends \BaseController {
                 $role = $this->getCurrentRole();
                 $datum->fill(Input::all());
                 $datum->setRole($role);
+                $user = User::where('username', '=', Auth::user()->getAuthIdentifier())->first();
+                $datum->user_id = $user->id;
                 $datum->save();
             } else {
                 var_dump($validator->messages());
