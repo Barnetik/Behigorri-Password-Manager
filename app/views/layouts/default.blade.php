@@ -36,7 +36,7 @@
                         <button type="submit" class="btn btn-default">Submit</button>
                     </form>
                     <ul class="nav navbar-nav navbar-right">
-                        <li><span class="navbar-text">agortazar</span></li>
+                        <li><span class="navbar-text">{{ Auth::user()->getAuthIdentifier() }}</span></li>
                         <li><a href="{{ URL::to('logout') }}">Logout</a></li>
                     </ul>
                 </div><!-- /.navbar-collapse -->
