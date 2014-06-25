@@ -19,7 +19,7 @@
                 {{{ $datum->name }}}
             </div>
             <div class="col-xs-3 text-right">
-                {{{ $datum->updated_at }}} ({{{ $datum->user->username }}})
+                <small>{{{ $datum->updated_at }}} ({{{ $datum->user->username }}})</small>
             </div>
             <div class="col-xs-3">
                 <button class="js-decrypt btn btn-danger" data-datum-id="{{{ $datum->id }}}">decrypt</button>
