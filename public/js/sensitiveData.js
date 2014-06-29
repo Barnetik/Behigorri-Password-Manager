@@ -1,87 +1,183 @@
 $(document).ready(function(){
-    var baseUrl = $('base').attr('href');
-    
-    var showAlert = function(message, context) {
-        var alertWrapper = $('<div />').addClass('alert alert-warning alert-dismissable fade in');
-        alertWrapper.append(
-            $('<button />').attr('type', 'button').addClass('close').data('dismiss', 'alert').prop('aria-hidden', true).text("x")
-        );
-        alertWrapper.append(message);
-        context.prepend(alertWrapper);
-//        setTimeout(function() {
-//            alertWrapper.alert('close');
-//        }, 5000);
-    };
-    
-    var idField = $('.js-decrypt-modal input[name=id]');
-    var passwordField = $('.js-decrypt-modal input[name=password]');
-    var submitButton = $('.js-decrypt-modal .js-submit');
-    var modal = $('.js-decrypt-modal');
+    var sensitiveData = (function() {
+        var baseUrl = $('base').attr('href');
 
-    $('.js-decrypt').click(function(e) {
-        var currentButton = $(e.currentTarget);
-        var currentElement = $('#datum-' + currentButton.data('datumId'));
-        modal.find('.modal-title').text(currentElement.find('.js-datum-name').text());
-        idField.val(currentButton.data('datumId'));
-        passwordField.val('');
-        modal.modal('show');
-    });
+        var newForm = new function() {
+            var self = this;
+            
+            this.$el = $('.js-new-form');
 
-    passwordField.on('change, keyup', function(e) {
-        var input = $(e.currentTarget);
-        if (input.val() !== '') {
-           submitButton.prop('disabled', false);
-        } else {
-           submitButton.prop('disabled', true);
-        }
-    });
-   
-    submitButton.click(function() {
-        if (passwordField.val() !== '') {
-            if (modal.find('.alert')) {
-                modal.find('.alert').alert('close');
-            }
-            $.post(baseUrl + '/decrypt', {
-                id: idField.val(),
-                password: passwordField.val()
-            }).done(function(data) {
-                var sensitiveDatum = JSON.parse(data);
-                newForm.find('.js-form-id').val(sensitiveDatum.id);
-                newForm.find('.js-form-name').val(sensitiveDatum.name);
-                newForm.find('.js-form-value').val(sensitiveDatum.value);
-                showNewForm();
-                modal.modal('hide');
-            }).fail(function(data) {
-                var response = JSON.parse(data.responseText);
-                showAlert(response.error.message, modal.find('.modal-body'));
+            this.ui = {
+                addNewButton: $('.js-add-new'),
+                cancelButton: this.$el.find('.js-add-new-cancel'),
+                fields: this.$el.find('input,textarea'),
+                idInput: this.$el.find('.js-form-id'),
+                nameInput: this.$el.find('.js-form-name'),
+                valueInput: this.$el.find('.js-form-value')
+            };
+
+            this.ui.addNewButton.on('click', function() {
+                self.show();
             });
-        }
-    });
-    
-    
-    var addNewButton = $('.js-add-new');
-    var newForm = $('.js-new-form');
-    addNewButton.click(function() {
-        showNewForm();
-    });
 
-    var addNewCancelButton = $('.js-add-new-cancel');
-    addNewCancelButton.click(function(e) {
-        resetNewForm();
-        hideNewForm();
-    });
-    
-    var showNewForm = function() {
-        addNewButton.addClass('hidden');
-        newForm.removeClass('hidden');
-    };
-    
-    var hideNewForm = function() {
-        newForm.addClass('hidden');
-        addNewButton.removeClass('hidden');
-    };
-    
-    var resetNewForm = function() {
-        newForm.find('input,textarea').val('');
-    };
+            this.ui.cancelButton.on('click', function() {
+                self.reset();
+                self.hide();
+            });
+
+            this.show = function() {
+                this.$el.removeClass('hidden');
+                this.ui.addNewButton.addClass('hidden');
+            };
+
+            this.hide = function() {
+                this.$el.addClass('hidden');
+                this.ui.addNewButton.removeClass('hidden');
+            };
+
+            this.reset = function() {
+                this.ui.fields.val('');
+            };
+
+            this.setData = function(sensitiveDatum) {
+                this.ui.idInput.val(sensitiveDatum.id);
+                this.ui.nameInput.val(sensitiveDatum.name);
+                this.ui.valueInput.val(sensitiveDatum.value);  
+            };
+        };
+
+        var passwordModal = new function() {
+            var self = this;
+
+            this.action = 'decrypt';
+            
+            this.$el = $('.js-decrypt-modal');
+
+            this.ui = {
+                idField: this.$el.find('input[name=id]'),
+                passwordField: this.$el.find('input[name=password]'),
+                submitButton: this.$el.find('.js-submit'),
+                modalTitle: this.$el.find('.modal-title'),
+                modalBody: this.$el.find('.modal-body')
+            };
+            
+            this.decrypt = function(currentElement) {
+                this.action = 'decrypt';
+                this.show(currentElement);
+            };
+            
+            this.delete = function(currentElement) {
+                this.action = 'delete';
+                this.show(currentElement);
+            };
+
+            this.show = function(datumElement) {
+                var textClass = 'info';
+                var submitText = 'Decrypt Now';
+                
+                if (this.action == 'delete') {
+                    textClass = 'danger';
+                    submitText = 'Delete Now';
+                }
+
+                if (this.$el.find('.alert')) {
+                    this.$el.find('.alert').alert('close');
+                }
+
+                this.ui.submitButton.prop('disabled', true);
+                this.ui.modalTitle.html('<strong class="text-' + textClass + '">' + this.action + '</strong>' + datumElement.find('.js-datum-name').text());
+                this.ui.idField.val(datumElement.data('datumId'));
+                this.ui.passwordField.val('');
+                this.ui.submitButton.attr('class', 'btn btn-' + textClass + ' js-submit');
+                this.ui.submitButton.text(submitText);
+                this.$el.modal('show');
+            };
+
+            this.hide = function() {
+                this.$el.modal('hide');
+            };
+
+            this.ui.passwordField.on('change, keyup', function(e) {
+                if ($(this).val() !== '') {
+                   self.ui.submitButton.prop('disabled', false);
+                } else {
+                   self.ui.submitButton.prop('disabled', true);
+                }
+            });
+
+            this.ui.submitButton.on('click', function() {
+                if (self.ui.passwordField.val() !== '') {
+                    if (self.$el.find('.alert')) {
+                        self.$el.find('.alert').alert('close');
+                    }
+
+                    if (self.action == 'delete') {
+                        self.doDelete();
+                    } else {
+                        self.doDecrypt();
+                    }
+                }
+            });
+            
+            this.doDecrypt = function() {
+                $.post(baseUrl + '/decrypt', {
+                    id: self.ui.idField.val(),
+                    password: self.ui.passwordField.val()
+                }).done(function(data) {
+                    var sensitiveDatum = JSON.parse(data);
+                    newForm.setData(sensitiveDatum);
+                    newForm.show();
+                    self.hide();
+                }).fail(function(data) {
+                    var response = JSON.parse(data.responseText);
+                    var alert = new alertMessage();
+                    alert.show(response.error.message, self.ui.modalBody);
+                });
+            };
+            
+            this.doDelete = function() {
+                $.post(baseUrl + '/delete', {
+                    id: self.ui.idField.val(),
+                    password: self.ui.passwordField.val()
+                }).done(function(data) {
+                    console.log("Data deleted!");
+                    $('#datum-' + self.ui.idField.val()).remove();
+                }).fail(function(data) {
+                    var response = JSON.parse(data.responseText);
+                    var alert = new alertMessage();
+                    alert.show(response.error.message, self.ui.modalBody);
+                });                
+            };
+        };
+
+        var alertMessage = function() {
+            var self = this;
+
+            this.alertWrapper = $('<div />').addClass('alert alert-warning alert-dismissable fade in');
+            this.alertWrapper.append(
+                $('<button data-dismiss="alert"/>').attr('type', 'button').addClass('close').prop('aria-hidden', true).text("x")
+            );
+
+            this.show = function(message, context) {
+                this.alertWrapper.append(message);
+                context.prepend(this.alertWrapper);
+                this.alertWrapper.alert();
+            };
+        };
+        
+        // Show decrypt modal
+        $('.js-decrypt').click(function(e) {
+            var currentButton = $(e.currentTarget);
+            var currentElement = $('#datum-' + currentButton.data('datumId'));
+            passwordModal.decrypt(currentElement);
+        });
+           
+        // Show decrypt modal
+        $('.js-delete').click(function(e) {
+            var currentButton = $(e.currentTarget);
+            var currentElement = $('#datum-' + currentButton.data('datumId'));
+            passwordModal.delete(currentElement);
+        });
+           
+    })();
 });
