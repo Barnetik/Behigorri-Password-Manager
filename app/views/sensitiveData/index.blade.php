@@ -14,7 +14,7 @@
         </div>
 
         @foreach ($sensitiveData as $datum)
-        <div id="datum-{{{ $datum->id }}}" data-model="{{{ $datum->toJSON() }}}" class="row datum-row">
+        <div id="datum-{{{ $datum->id }}}" class="row datum-row" data-datum-id="{{{ $datum->id }}}">
             <div class="col-xs-6 js-datum-name">
                 {{{ $datum->name }}}
             </div>
@@ -22,7 +22,14 @@
                 <small>{{{ $datum->updated_at }}} ({{{ $datum->user->username }}})</small>
             </div>
             <div class="col-xs-3">
-                <button class="js-decrypt btn btn-danger" data-datum-id="{{{ $datum->id }}}">decrypt</button>
+                <span class="js-decrypt fa-stack fa-lg" data-datum-id="{{{ $datum->id }}}">
+                    <i class="fa fa-circle-o fa-stack-2x"></i>
+                    <i class="fa fa-unlock-alt fa-stack-1x"></i>
+                </span>
+                <span class="js-delete fa-stack fa-lg" data-datum-id="{{{ $datum->id }}}">
+                    <i class="fa fa-circle-o fa-stack-2x"></i>
+                    <i class="fa fa-times fa-stack-1x"></i>
+                </span>
             </div>
         </div>
         @endforeach
@@ -60,7 +67,7 @@
     <div class="modal-content">
       <div class="modal-header">
         <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h4 class="modal-title">Modal title</h4>
+        <h4 class="modal-title">Decrypt data</h4>
       </div>
       <div class="modal-body">
           <input type="hidden" name="id"/>
@@ -69,6 +76,25 @@
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         <button type="button" class="btn btn-danger js-submit" disabled="disabled">Decrypt Now</button>
+      </div>
+    </div><!-- /.modal-content -->
+  </div><!-- /.modal-dialog -->
+</div><!-- /.modal -->
+
+<div class="modal fade js-delete-modal">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+        <h4 class="modal-title">Delete data</h4>
+      </div>
+      <div class="modal-body">
+          <input type="hidden" name="id"/>
+          <input type="password" name="password" placeholder="password" class="form-control"/>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+        <button type="button" class="btn btn-danger js-submit" disabled="disabled">Delete Now</button>
       </div>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->

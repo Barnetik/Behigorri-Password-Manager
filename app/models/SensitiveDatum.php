@@ -31,7 +31,6 @@ class SensitiveDatum extends \Eloquent
     {
         $this->gnupg->addEncryptKey($this->role->gpg_fingerprint);
         $this->value = $this->gnupg->encrypt($this->value);
-        $env = getenv("GNUPGHOME");
         $this->encrypted = true;
         $this->gnupg->clearEncryptKeys();
     }
