@@ -17,7 +17,8 @@ Route::group(array('before' => 'auth'), function()
         return Redirect::to('sensitiveData');
     });
     
-    Route::post('/decrypt', 'SensitiveDataController@decrypt');
+    Route::post('/sensitiveData/decrypt', 'SensitiveDataController@decrypt');
+    Route::post('/sensitiveData/delete', 'SensitiveDataController@delete');
     
     Route::resource('sensitiveData', 'SensitiveDataController');
 

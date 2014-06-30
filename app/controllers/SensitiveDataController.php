@@ -71,10 +71,31 @@ class SensitiveDataController extends \BaseController {
         public function decrypt()
         {
             $datum = SensitiveDatum::find(Input::get('id'));
+            
+            if (!$datum) {
+                throw new \Exception('Data not found');
+            }
+            
             $role = $this->getCurrentRole();
             $datum->setRole($role);
             $datum->decrypt(Input::get('password'));
             return $datum->toJSON();
+        }
+        
+        public function delete()
+        {
+            $datum = SensitiveDatum::find(Input::get('id'));
+
+            if (!$datum) {
+                throw new \Exception('Data not found');
+            }
+            
+            $role = $this->getCurrentRole();
+            $datum->setRole($role);
+            $datum->decrypt(Input::get('password'));
+            $datum->delete();
+            
+            return Response::make('', 204);
         }
         
         protected function getCurrentRole()

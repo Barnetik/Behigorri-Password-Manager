@@ -120,7 +120,7 @@ $(document).ready(function(){
             });
             
             this.doDecrypt = function() {
-                $.post(baseUrl + '/decrypt', {
+                $.post(baseUrl + '/sensitiveData/decrypt', {
                     id: self.ui.idField.val(),
                     password: self.ui.passwordField.val()
                 }).done(function(data) {
@@ -136,11 +136,11 @@ $(document).ready(function(){
             };
             
             this.doDelete = function() {
-                $.post(baseUrl + '/delete', {
+                $.post(baseUrl + '/sensitiveData/delete', {
                     id: self.ui.idField.val(),
                     password: self.ui.passwordField.val()
                 }).done(function(data) {
-                    console.log("Data deleted!");
+                    self.hide();
                     $('#datum-' + self.ui.idField.val()).remove();
                 }).fail(function(data) {
                     var response = JSON.parse(data.responseText);
