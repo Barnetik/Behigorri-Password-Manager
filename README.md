@@ -1,7 +1,7 @@
 Behigorri Password Manager
 ==========================
 
-Behigorri is (or will be) a Password Manager or Keyring intended to save sensitive data on a remote server to be accesible from anywhere.
+Behigorri is (or will be, this is still a Work In Progress) a Password Manager or Keyring intended to save sensitive data on a remote server to be accesible from anywhere.
 
 Features
 --------
@@ -70,6 +70,6 @@ And insert it into the roles table:
   `INSERT INTO roles values(1, 500, 'admin', 'F6A7370F50C953034BC4F4F17F08F1678C06');`
 
 
-Easy, wasn't it? 
+Easy, wasn't it? :p
 
-We promess to make this better soon ;)
+We promess to make this better soon, but as stated before, this is still a Work In Progress.
