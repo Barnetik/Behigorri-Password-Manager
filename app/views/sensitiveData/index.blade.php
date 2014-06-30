@@ -1,38 +1,39 @@
 
 <div class="row">
-    
     <div class="col-xs-7">
-        <div class="row datum-row">
-            <div class="col-xs-6">
-                <strong>Description</strong>
-            </div>
-            <div class="col-xs-3 text-right">
-                <strong>Last update</strong>
-            </div>
-            <div class="col-xs-3">
-            </div>
-        </div>
+    
+        <table class="table table-striped table-hover">
+            <thead>
+                <tr>
+                    <th class="col-xs-5">Description</th>
+                    <th class="col-xs-4 text-right">Last update</th>
+                    <th class="col-xs-3"></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach ($sensitiveData as $datum)
+                <tr id="datum-{{{ $datum->id }}}" data-datum-id="{{{ $datum->id }}}">
+                    <td class="col-xs-5 js-datum-name">
+                        {{{ $datum->name }}}
+                    </td>
+                    <td class="col-xs-4 text-right">
+                        <small>{{{ $datum->updated_at }}} ({{{ $datum->user->username }}})</small>
+                    </td>
+                    <td class="col-xs-3 text-right"> 
+                        <span class="js-decrypt fa-stack fa-lg" data-datum-id="{{{ $datum->id }}}">
+                            <i class="fa fa-circle-o fa-stack-2x"></i>
+                            <i class="fa fa-unlock-alt fa-stack-1x"></i>
+                        </span>
+                        <span class="js-delete fa-stack fa-lg" data-datum-id="{{{ $datum->id }}}">
+                            <i class="fa fa-circle-o fa-stack-2x"></i>
+                            <i class="fa fa-times fa-stack-1x"></i>
+                        </span>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
 
-        @foreach ($sensitiveData as $datum)
-        <div id="datum-{{{ $datum->id }}}" class="row datum-row" data-datum-id="{{{ $datum->id }}}">
-            <div class="col-xs-6 js-datum-name">
-                {{{ $datum->name }}}
-            </div>
-            <div class="col-xs-3 text-right">
-                <small>{{{ $datum->updated_at }}} ({{{ $datum->user->username }}})</small>
-            </div>
-            <div class="col-xs-3">
-                <span class="js-decrypt fa-stack fa-lg" data-datum-id="{{{ $datum->id }}}">
-                    <i class="fa fa-circle-o fa-stack-2x"></i>
-                    <i class="fa fa-unlock-alt fa-stack-1x"></i>
-                </span>
-                <span class="js-delete fa-stack fa-lg" data-datum-id="{{{ $datum->id }}}">
-                    <i class="fa fa-circle-o fa-stack-2x"></i>
-                    <i class="fa fa-times fa-stack-1x"></i>
-                </span>
-            </div>
-        </div>
-        @endforeach
     </div>
     
     <div class="col-xs-5">
