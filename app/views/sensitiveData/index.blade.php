@@ -41,7 +41,7 @@
             <button class="btn btn-success input-medium pull-right js-add-new">Add New</button>
         </div>
         <div class="row hidden js-new-form">
-            <div class="span6">
+            <div class="span12">
                 <form method="post">
                     <input name="id" type="hidden" class="js-form-id" />
                     <div class="controls controls-row">
@@ -58,8 +58,13 @@
                 </form>
             </div>
         </div>    
+        <div class="row js-markdown-placeholder">
+            <div class="span12">
+                <h2 class="js-markdown-title"></h2>
+                <div class="js-markdown-body"></div>
+            </div>
+        </div>
     </div>
-    
 </div>
 
 

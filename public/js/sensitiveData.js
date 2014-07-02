@@ -40,9 +40,9 @@ $(document).ready(function(){
             };
 
             this.setData = function(sensitiveDatum) {
-                this.ui.idInput.val(sensitiveDatum.id);
-                this.ui.nameInput.val(sensitiveDatum.name);
-                this.ui.valueInput.val(sensitiveDatum.value);  
+                this.ui.idInput.val(sensitiveDatum.id).change();
+                this.ui.nameInput.val(sensitiveDatum.name).change();
+                this.ui.valueInput.val(sensitiveDatum.value).change();  
             };
         };
 
@@ -163,6 +163,26 @@ $(document).ready(function(){
                 context.prepend(this.alertWrapper);
                 this.alertWrapper.alert();
             };
+        };
+        
+        var markdownPlaceholder = new function() {
+            var self = this;
+            
+            this.$el = $('.js-markdown-placeholder');
+            
+            this.ui = {
+                'title': this.$el.find('.js-markdown-title'),
+                'body': this.$el.find('.js-markdown-body')
+            };
+            
+            newForm.ui.nameInput.on('change', function() {
+                self.ui.title.html($(this).val());
+            });
+            
+            newForm.ui.valueInput.on('change', function() {
+                console.log(self.ui.body);
+                self.ui.body.html(markdown.toHTML($(this).val()));
+            });
         };
         
         // Show decrypt modal
