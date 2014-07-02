@@ -1,7 +1,7 @@
 $(document).ready(function(){
     var sensitiveData = (function() {
         var baseUrl = $('base').attr('href');
-
+        
         var newForm = new function() {
             var self = this;
             
@@ -25,14 +25,18 @@ $(document).ready(function(){
                 self.hide();
             });
 
-            this.show = function() {
+            this.show = function(tabName) {
+                var tabName = tabName || 'edit';
                 this.$el.removeClass('hidden');
                 this.ui.addNewButton.addClass('hidden');
+                $('.js-sensitive-data-tabs').removeClass('hidden');
+                $('#' + tabName + '-sensitive-data-tab').tab('show');
             };
 
             this.hide = function() {
                 this.$el.addClass('hidden');
                 this.ui.addNewButton.removeClass('hidden');
+                $('.js-sensitive-data-tabs').addClass('hidden');
             };
 
             this.reset = function() {
@@ -44,6 +48,11 @@ $(document).ready(function(){
                 this.ui.nameInput.val(sensitiveDatum.name).change();
                 this.ui.valueInput.val(sensitiveDatum.value).change();  
             };
+            
+            $('.js-close-sensitive-data').on('click', function(){
+                self.reset();
+                self.hide();
+            });
         };
 
         var passwordModal = new function() {
@@ -126,7 +135,7 @@ $(document).ready(function(){
                 }).done(function(data) {
                     var sensitiveDatum = JSON.parse(data);
                     newForm.setData(sensitiveDatum);
-                    newForm.show();
+                    newForm.show('view');
                     self.hide();
                 }).fail(function(data) {
                     var response = JSON.parse(data.responseText);
