@@ -53,7 +53,7 @@
             <!-- Tab panes -->
             <div class="tab-content">
                 <div class="tab-pane active" id="edit-sensitive-data">
-                    <div class="row hidden js-new-form">
+                    <div class="row js-new-form">
                         <div class="col-xs-12">
                             <form method="post">
                                 <input name="id" type="hidden" class="js-form-id" />

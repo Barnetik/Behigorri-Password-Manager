@@ -2,13 +2,44 @@ $(document).ready(function(){
     var sensitiveData = (function() {
         var baseUrl = $('base').attr('href');
         
+        var sensitiveArea = new function() {
+            var self = this;
+            
+            this.$el = $('.js-sensitive-data-tabs');
+            
+            this.ui = {
+                addNewButton: $('.js-add-new'),
+                closeButton: this.$el.find('.js-close-sensitive-data')
+            };
+            
+            this.show = function(tabName) {
+                var tabName = tabName || 'edit';
+                $('#' + tabName + '-sensitive-data-tab').tab('show');
+                this.ui.addNewButton.addClass('hidden');
+                this.$el.removeClass('hidden');
+            };
+
+            this.hide = function() {
+                this.ui.addNewButton.removeClass('hidden');
+                this.$el.addClass('hidden');
+            };
+
+            this.ui.addNewButton.on('click', function() {
+                self.show();
+            });
+
+            this.ui.closeButton.on('click', function(){
+                newForm.reset();
+                self.hide();
+            });
+        };
+        
         var newForm = new function() {
             var self = this;
             
             this.$el = $('.js-new-form');
 
             this.ui = {
-                addNewButton: $('.js-add-new'),
                 cancelButton: this.$el.find('.js-add-new-cancel'),
                 fields: this.$el.find('input,textarea'),
                 idInput: this.$el.find('.js-form-id'),
@@ -16,31 +47,21 @@ $(document).ready(function(){
                 valueInput: this.$el.find('.js-form-value')
             };
 
-            this.ui.addNewButton.on('click', function() {
-                self.show();
-            });
-
             this.ui.cancelButton.on('click', function() {
                 self.reset();
                 self.hide();
             });
 
             this.show = function(tabName) {
-                var tabName = tabName || 'edit';
-                this.$el.removeClass('hidden');
-                this.ui.addNewButton.addClass('hidden');
-                $('.js-sensitive-data-tabs').removeClass('hidden');
-                $('#' + tabName + '-sensitive-data-tab').tab('show');
+                sensitiveArea.show(tabName);
             };
 
             this.hide = function() {
-                this.$el.addClass('hidden');
-                this.ui.addNewButton.removeClass('hidden');
-                $('.js-sensitive-data-tabs').addClass('hidden');
+                sensitiveArea.hide();
             };
 
             this.reset = function() {
-                this.ui.fields.val('');
+                this.ui.fields.val('').change();
             };
 
             this.setData = function(sensitiveDatum) {
@@ -48,11 +69,6 @@ $(document).ready(function(){
                 this.ui.nameInput.val(sensitiveDatum.name).change();
                 this.ui.valueInput.val(sensitiveDatum.value).change();  
             };
-            
-            $('.js-close-sensitive-data').on('click', function(){
-                self.reset();
-                self.hide();
-            });
         };
 
         var passwordModal = new function() {
