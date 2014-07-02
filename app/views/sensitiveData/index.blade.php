@@ -40,26 +40,60 @@
         <div class="row">
             <button class="btn btn-success input-medium pull-right js-add-new">Add New</button>
         </div>
-        <div class="row hidden js-new-form">
-            <div class="span6">
-                <form method="post">
-                    <input name="id" type="hidden" class="js-form-id" />
-                    <div class="controls controls-row">
-                        <input name="name" type="text" class="span3 form-control js-form-name" placeholder="Description">
-                    </div>
-                    <div class="controls">
-                        <textarea name="value" class="span6 form-control js-form-value" placeholder="Sensitive data" rows="5"></textarea>
-                    </div>
+        
+        <div class="js-sensitive-data-tabs hidden col-xs-12">
+            <!-- Nav tabs -->
+            <button type="button" class="close js-close-sensitive-data"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+            
+            <ul class="nav nav-tabs" role="tablist">
+              <li class="active"><a href="#edit-sensitive-data" role="tab" data-toggle="tab" id="edit-sensitive-data-tab">Edit</a></li>
+              <li><a href="#markdown-sensitive-data" role="tab" data-toggle="tab" id="markdown-sensitive-data-tab">Markdown</a></li>
+              <li><a href="#raw-sensitive-data" role="tab" data-toggle="tab" id="raw-sensitive-data-tab">Raw</a></li>
+            </ul>
 
-                    <div class="controls">
-                        <button type="submit" class="btn btn-primary input-medium pull-right">Send</button>
-                        <button type="reset" class="btn btn-warning input-medium pull-right js-add-new-cancel">Cancel</button>
+            <!-- Tab panes -->
+            <div class="tab-content">
+                <div class="tab-pane active" id="edit-sensitive-data">
+                    <div class="row js-new-form">
+                        <div class="col-xs-12">
+                            <form method="post">
+                                <input name="id" type="hidden" class="js-form-id" />
+                                <div class="controls controls-row">
+                                    <input name="name" type="text" class="span3 form-control js-form-name" placeholder="Description">
+                                </div>
+                                <div class="controls">
+                                    <textarea name="value" class="span6 form-control js-form-value" placeholder="Sensitive data" rows="15"></textarea>
+                                </div>
+
+                                <div class="controls">
+                                    <button type="submit" class="btn btn-primary input-medium pull-right">Send</button>
+                                    <button type="reset" class="btn btn-warning input-medium pull-right js-add-new-cancel">Cancel</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>    
+                </div>
+                <div class="tab-pane" id="markdown-sensitive-data">
+                    <div class="row js-markdown-placeholder">
+                        <div class="span12">
+                            <h2 class="js-markdown-title"></h2>
+                            <div class="js-markdown-body"></div>
+                        </div>
                     </div>
-                </form>
-            </div>
-        </div>    
+                </div>
+                <div class="tab-pane" id="raw-sensitive-data">
+                    <div class="row js-raw-placeholder">
+                        <div class="span12">
+                            <h2 class="js-raw-title"></h2>
+                            <div>
+                                <pre class="js-raw-body"></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>        
+        </div>
     </div>
-    
 </div>
 
 
