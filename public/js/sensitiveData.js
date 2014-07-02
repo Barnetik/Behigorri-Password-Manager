@@ -15,6 +15,7 @@ $(document).ready(function(){
             this.show = function(tabName) {
                 var tabName = tabName || 'edit';
                 $('#' + tabName + '-sensitive-data-tab').tab('show');
+                console.log('#' + tabName + '-sensitive-data-tab');
                 this.ui.addNewButton.addClass('hidden');
                 this.$el.removeClass('hidden');
             };
@@ -151,7 +152,7 @@ $(document).ready(function(){
                 }).done(function(data) {
                     var sensitiveDatum = JSON.parse(data);
                     newForm.setData(sensitiveDatum);
-                    newForm.show('view');
+                    newForm.show('markdown');
                     self.hide();
                 }).fail(function(data) {
                     var response = JSON.parse(data.responseText);
@@ -205,8 +206,26 @@ $(document).ready(function(){
             });
             
             newForm.ui.valueInput.on('change', function() {
-                console.log(self.ui.body);
                 self.ui.body.html(markdown.toHTML($(this).val()));
+            });
+        };
+        
+        var rawPlaceholder = new function() {
+            var self = this;
+            
+            this.$el = $('.js-raw-placeholder');
+            
+            this.ui = {
+                'title': this.$el.find('.js-raw-title'),
+                'body': this.$el.find('.js-raw-body')
+            };
+            
+            newForm.ui.nameInput.on('change', function() {
+                self.ui.title.html($(this).val());
+            });
+            
+            newForm.ui.valueInput.on('change', function() {
+                self.ui.body.html($(this).val());
             });
         };
         
