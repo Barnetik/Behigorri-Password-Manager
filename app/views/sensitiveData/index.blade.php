@@ -105,31 +105,14 @@
         <h4 class="modal-title">Decrypt data</h4>
       </div>
       <div class="modal-body">
-          <input type="hidden" name="id"/>
-          <input type="password" name="password" placeholder="password" class="form-control"/>
+          <form>
+            <input type="hidden" name="id"/>
+            <input type="password" name="password" placeholder="password" class="form-control"/>
+          </form>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
         <button type="button" class="btn btn-danger js-submit" disabled="disabled">Decrypt Now</button>
-      </div>
-    </div><!-- /.modal-content -->
-  </div><!-- /.modal-dialog -->
-</div><!-- /.modal -->
-
-<div class="modal fade js-delete-modal">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-        <h4 class="modal-title">Delete data</h4>
-      </div>
-      <div class="modal-body">
-          <input type="hidden" name="id"/>
-          <input type="password" name="password" placeholder="password" class="form-control"/>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-        <button type="button" class="btn btn-danger js-submit" disabled="disabled">Delete Now</button>
       </div>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->

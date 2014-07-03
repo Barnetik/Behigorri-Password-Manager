@@ -15,7 +15,6 @@ $(document).ready(function(){
             this.show = function(tabName) {
                 var tabName = tabName || 'edit';
                 $('#' + tabName + '-sensitive-data-tab').tab('show');
-                console.log('#' + tabName + '-sensitive-data-tab');
                 this.ui.addNewButton.addClass('hidden');
                 this.$el.removeClass('hidden');
             };
@@ -84,7 +83,8 @@ $(document).ready(function(){
                 passwordField: this.$el.find('input[name=password]'),
                 submitButton: this.$el.find('.js-submit'),
                 modalTitle: this.$el.find('.modal-title'),
-                modalBody: this.$el.find('.modal-body')
+                modalBody: this.$el.find('.modal-body'),
+                form: this.$el.find('form')
             };
             
             this.decrypt = function(currentElement) {
@@ -117,6 +117,9 @@ $(document).ready(function(){
                 this.ui.submitButton.attr('class', 'btn btn-' + textClass + ' js-submit');
                 this.ui.submitButton.text(submitText);
                 this.$el.modal('show');
+                this.$el.on('shown.bs.modal', function() {
+                    self.ui.passwordField.focus();
+                });
             };
 
             this.hide = function() {
@@ -130,8 +133,8 @@ $(document).ready(function(){
                    self.ui.submitButton.prop('disabled', true);
                 }
             });
-
-            this.ui.submitButton.on('click', function() {
+            
+            this.submit = function() {
                 if (self.ui.passwordField.val() !== '') {
                     if (self.$el.find('.alert')) {
                         self.$el.find('.alert').alert('close');
@@ -142,7 +145,13 @@ $(document).ready(function(){
                     } else {
                         self.doDecrypt();
                     }
-                }
+                }                
+            };
+
+            this.ui.submitButton.on('click', this.submit);
+            this.ui.form.on('submit', function(e) {
+                e.preventDefault();
+                self.submit();
             });
             
             this.doDecrypt = function() {
