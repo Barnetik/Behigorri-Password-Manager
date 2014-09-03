@@ -1,14 +1,15 @@
 <?php
 use Service\Gnupg;
 
-class SensitiveDatum extends \Eloquent 
+class SensitiveDatum extends \Eloquent
 {
-    public $guarded = [];
+    public $fillable = ['name', 'value'];
     public $encrypted = false;
+
     protected $gnupg;
     protected $role;
 
-    public function __construct(array $attributes = array()) 
+    public function __construct(array $attributes = array())
     {
         parent::__construct($attributes);
         $this->gnupg = App::make('\\Service\\Gnupg');
@@ -30,29 +31,39 @@ class SensitiveDatum extends \Eloquent
     public function encrypt()
     {
         $this->gnupg->addEncryptKey($this->role->gpg_fingerprint);
-        $this->value = $this->gnupg->encrypt($this->value);
+        if ($this->isDirty('value')) {
+            $this->value = $this->gnupg->encrypt($this->value);
+        }
+        if ($this->isDirty('file_contents')) {
+            $this->file_contents = $this->gnupg->encrypt($this->file_contents);
+        }
         $this->encrypted = true;
         $this->gnupg->clearEncryptKeys();
     }
-    
+
     public function decrypt($password)
     {
-        $this->value = $this->gnupg->decrypt($this->value, $password);
+        if ($this->value) {
+            $this->value = $this->gnupg->decrypt($this->value, $password);
+        }
+        if ($this->file_contents) {
+            $this->file_contents = $this->gnupg->decrypt($this->file_contents, $password);
+        }
         $this->encrypted = false;
     }
 
-    public function setEncryptedValue($value) 
+    public function setEncryptedValue($value)
     {
         $this->encrypted = true;
         $this->value = $value;
     }
 
-    public function isEncrypted() 
+    public function isEncrypted()
     {
         return $this->encrypted;
     }
-    
-    public function setRole(\Role $role) 
+
+    public function setRole(\Role $role)
     {
         $validator = Validator::make($role->toArray(), array(
             'name' => 'alpha_dash'
@@ -60,7 +71,7 @@ class SensitiveDatum extends \Eloquent
         if ($validator->fails()) {
             throw new \Exception('Wrong role name: ' . $validator->messages()->first('name'));
         }
-        
+
         putenv("GNUPGHOME=" . storage_path() . '/keys/' . $role->name);
         $this->role = $role;
     }
@@ -68,5 +79,11 @@ class SensitiveDatum extends \Eloquent
     public function user()
     {
         return $this->belongsTo('User');
+    }
+
+    public function toJson($options = 0) {
+        $array = $this->toArray();
+        unset($array['file_contents']);
+        return json_encode($array, $options);
     }
 }
