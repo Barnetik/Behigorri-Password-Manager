@@ -1,7 +1,7 @@
 
 <div class="row">
     <div class="col-xs-7">
-    
+
         <table class="table table-striped table-hover">
             <thead>
                 <tr>
@@ -19,7 +19,7 @@
                     <td class="col-xs-4 text-right">
                         <small>{{{ $datum->updated_at }}} ({{{ $datum->user->username }}})</small>
                     </td>
-                    <td class="col-xs-3 text-right"> 
+                    <td class="col-xs-3 text-right">
                         <span class="js-decrypt fa-stack fa-lg" data-datum-id="{{{ $datum->id }}}">
                             <i class="fa fa-circle-o fa-stack-2x"></i>
                             <i class="fa fa-unlock-alt fa-stack-1x"></i>
@@ -35,16 +35,16 @@
         </table>
 
     </div>
-    
+
     <div class="col-xs-5">
         <div class="row">
             <button class="btn btn-success input-medium pull-right js-add-new">Add New</button>
         </div>
-        
+
         <div class="js-sensitive-data-tabs hidden col-xs-12">
             <!-- Nav tabs -->
             <button type="button" class="close js-close-sensitive-data"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
-            
+
             <ul class="nav nav-tabs" role="tablist">
               <li class="active"><a href="#edit-sensitive-data" role="tab" data-toggle="tab" id="edit-sensitive-data-tab">Edit</a></li>
               <li><a href="#markdown-sensitive-data" role="tab" data-toggle="tab" id="markdown-sensitive-data-tab">Markdown</a></li>
@@ -56,42 +56,50 @@
                 <div class="tab-pane active" id="edit-sensitive-data">
                     <div class="row js-new-form">
                         <div class="col-xs-12">
-                            <form method="post">
-                                <input name="id" type="hidden" class="js-form-id" />
+                            {{ Form::open(array('method' => 'post', 'files' => true)) }}
+                                {{ Form::input('hidden', 'id', null, array('class' => 'js-form-id')) }}
                                 <div class="controls controls-row">
-                                    <input name="name" type="text" class="span3 form-control js-form-name" placeholder="Description">
+                                    {{ Form::input('text', 'name', null, array('class' => 'col-xs-6 form-control js-form-name', 'placeholder' => 'Description'))}}
+                                    {{ Form::errorMsg($validator, 'name')}}
                                 </div>
                                 <div class="controls">
-                                    <textarea name="value" class="span6 form-control js-form-value" placeholder="Sensitive data" rows="15"></textarea>
+                                    {{ Form::textarea('value', null, array('class' => 'col-xs-6 form-control js-form-value', 'placeholder' => 'Sensitive data', 'rows' => '15'))}}
+                                    {{ Form::errorMsg($validator, 'value')}}
                                 </div>
-
+                                <div class="controls">
+                                    <a href="#" class="js-file-link"></a>
+                                    {{ Form::file('file', null, array('class' => 'col-xs-6 form-control js-form-value', 'placeholder' => 'Sensitive data', 'rows' => '15'))}}
+                                    {{ Form::errorMsg($validator, 'file')}}
+                                </div>
                                 <div class="controls">
                                     <button type="submit" class="btn btn-primary input-medium pull-right">Send</button>
                                     <button type="reset" class="btn btn-warning input-medium pull-right js-add-new-cancel">Cancel</button>
                                 </div>
-                            </form>
+                            {{ Form::close() }}
                         </div>
-                    </div>    
+                    </div>
                 </div>
                 <div class="tab-pane" id="markdown-sensitive-data">
                     <div class="row js-markdown-placeholder">
-                        <div class="span12">
+                        <div class="col-xs-12">
                             <h2 class="js-markdown-title"></h2>
                             <div class="js-markdown-body"></div>
+                            <a href="#" class="js-file-link"></a>
                         </div>
                     </div>
                 </div>
                 <div class="tab-pane" id="raw-sensitive-data">
                     <div class="row js-raw-placeholder">
-                        <div class="span12">
+                        <div class="col-xs-12">
                             <h2 class="js-raw-title"></h2>
                             <div>
                                 <pre class="js-raw-body"></pre>
                             </div>
+                            <a href="#" class="js-file-link"></a>
                         </div>
                     </div>
                 </div>
-            </div>        
+            </div>
         </div>
     </div>
 </div>
