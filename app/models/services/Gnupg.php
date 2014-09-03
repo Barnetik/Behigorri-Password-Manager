@@ -29,27 +29,27 @@ class Gnupg {
 
     private $gnupg;
 
-    public function __construct(\Gnupg $gnupg) 
+    public function __construct(\Gnupg $gnupg)
     {
         $this->gnupg = $gnupg;
         $this->gnupg->setErrorMode(\Gnupg::ERROR_EXCEPTION);
     }
-    
+
     public function addEncryptKey($fingerprint)
     {
         $this->gnupg->addEncryptKey($fingerprint);
     }
-    
+
     public function clearEncryptKeys()
     {
         $this->gnupg->clearEncryptKeys();
     }
-    
+
     public function encrypt($data)
     {
         return $this->gnupg->encrypt($data);
     }
-    
+
     /*
      * TODO: Make this shell_exec safer.
      */
@@ -58,20 +58,27 @@ class Gnupg {
         $encFile = tempnam(sys_get_temp_dir(), '');
         file_put_contents($encFile, $encryptedData);
         $command = sprintf(
-            'gpg --homedir %s --batch --passphrase %s --yes -d %s 2> /dev/null', 
-            escapeshellarg(getenv('GNUPGHOME')), 
-            escapeshellarg($password), 
+            'gpg --homedir %s --batch --passphrase %s --yes -d %s 2> /dev/null',
+            escapeshellarg(getenv('GNUPGHOME')),
+            escapeshellarg($password),
             escapeshellarg($encFile)
         );
-        
+
         $aClearData = [];
         $returnVar = null;
-        exec($command, $aClearData, $returnVar);
-        
+
+        ob_start();
+        passthru($command, $returnVar);
+        $data = ob_get_contents();
+        ob_end_clean();
+//        exec($command, $aClearData, $returnVar);
+
         if ($returnVar != 0) {
             throw new \Exception('Data could not be decrypted');
         }
+
         unlink($encFile);
-        return implode("\n", $aClearData);
+        return $data;
     }
+
 }
