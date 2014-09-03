@@ -9,7 +9,7 @@ $(document).ready(function(){
 
             this.ui = {
                 addNewButton: $('.js-add-new'),
-                closeButton: this.$el.find('.js-close-sensitive-data'),
+                closeButton: this.$el.find('.js-close-sensitive-data')
             };
 
             this.init = function() {
@@ -57,6 +57,7 @@ $(document).ready(function(){
                 idInput: this.$el.find('.js-form-id'),
                 nameInput: this.$el.find('.js-form-name'),
                 valueInput: this.$el.find('.js-form-value'),
+                fileLinks: $(this.$el.parents('.tab-content')[0]).find('.js-file-link')
             };
 
             this.ui.cancelButton.on('click', function() {
@@ -81,14 +82,15 @@ $(document).ready(function(){
                 this.ui.idInput.val(sensitiveDatum.id).change();
                 this.ui.nameInput.val(sensitiveDatum.name).change();
                 this.ui.valueInput.val(sensitiveDatum.value).change();
-                $('.js-file-link').text(sensitiveDatum.file);
+                this.ui.fileLinks.text(sensitiveDatum.file);
             };
 
-            $('.js-file-link').on('click', function() {
+            this.ui.fileLinks.click(function(e) {
+                e.preventDefault();
                 var currentElement = $('#datum-' + self.ui.idInput.val());
                 passwordModal.download(currentElement);
-                return false;
             });
+
         };
 
         var passwordModal = new function() {
@@ -126,7 +128,7 @@ $(document).ready(function(){
                 var textClass = 'info';
                 var submitText = 'Decrypt Now';
 
-                if (this.action == 'delete') {
+                if (this.action === 'delete') {
                     textClass = 'danger';
                     submitText = 'Delete Now';
                 }
@@ -135,7 +137,7 @@ $(document).ready(function(){
                     this.$el.find('.alert').alert('close');
                 }
 
-                if (this.action == 'download') {
+                if (this.action === 'download') {
                     submitText = 'Download Now';
                 }
 
@@ -309,6 +311,13 @@ $(document).ready(function(){
             var currentButton = $(e.currentTarget);
             var currentElement = $('#datum-' + currentButton.data('datumId'));
             passwordModal.delete(currentElement);
+        });
+
+        $('.js-download').click(function(e) {
+            console.log("hola");
+            var currentButton = $(e.currentTarget);
+            var currentElement = $('#datum-' + currentButton.data('datumId'));
+            passwordModal.download(currentElement);
         });
 
     })();

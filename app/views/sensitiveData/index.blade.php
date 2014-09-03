@@ -20,6 +20,12 @@
                         <small>{{{ $datum->updated_at }}} ({{{ $datum->user->username }}})</small>
                     </td>
                     <td class="col-xs-3 text-right">
+                        @if ($datum->file)
+                            <span class="js-download fa-stack fa-lg" data-datum-id="{{{ $datum->id }}}">
+                                <i class="fa fa-circle-o fa-stack-2x"></i>
+                                <i class="fa fa-download fa-stack-1x"></i>
+                            </span>
+                        @endif
                         <span class="js-decrypt fa-stack fa-lg" data-datum-id="{{{ $datum->id }}}">
                             <i class="fa fa-circle-o fa-stack-2x"></i>
                             <i class="fa fa-unlock-alt fa-stack-1x"></i>
