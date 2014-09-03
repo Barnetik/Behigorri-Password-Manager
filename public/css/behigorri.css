@@ -1,3 +1,7 @@
 .datum-row {
     margin-top: 5px;
 }
+
+.js-new-form .form-group{
+    margin: 2px 0px;
+}

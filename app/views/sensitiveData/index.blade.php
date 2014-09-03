@@ -64,20 +64,20 @@
                         <div class="col-xs-12">
                             {{ Form::open(array('method' => 'post', 'files' => true)) }}
                                 {{ Form::input('hidden', 'id', null, array('class' => 'js-form-id')) }}
-                                <div class="controls controls-row">
-                                    {{ Form::input('text', 'name', null, array('class' => 'col-xs-6 form-control js-form-name', 'placeholder' => 'Description'))}}
+                                <div class="form-group">
+                                    {{ Form::input('text', 'name', null, array('class' => 'form-control js-form-name', 'placeholder' => 'Description'))}}
                                     {{ Form::errorMsg($validator, 'name')}}
                                 </div>
-                                <div class="controls">
-                                    {{ Form::textarea('value', null, array('class' => 'col-xs-6 form-control js-form-value', 'placeholder' => 'Sensitive data', 'rows' => '15'))}}
+                                <div class="form-group">
+                                    {{ Form::textarea('value', null, array('class' => 'form-control js-form-value', 'placeholder' => 'Sensitive data', 'rows' => '15'))}}
                                     {{ Form::errorMsg($validator, 'value')}}
                                 </div>
-                                <div class="controls">
+                                <div class="form-group">
                                     <a href="#" class="js-file-link"></a>
-                                    {{ Form::file('file', null, array('class' => 'col-xs-6 form-control js-form-value', 'placeholder' => 'Sensitive data', 'rows' => '15'))}}
+                                    {{ Form::file('file', null, array('class' => 'form-control js-form-value', 'placeholder' => 'Sensitive data', 'rows' => '15'))}}
                                     {{ Form::errorMsg($validator, 'file')}}
                                 </div>
-                                <div class="controls">
+                                <div class="form-group">
                                     <button type="submit" class="btn btn-primary input-medium pull-right">Send</button>
                                     <button type="reset" class="btn btn-warning input-medium pull-right js-add-new-cancel">Cancel</button>
                                 </div>
