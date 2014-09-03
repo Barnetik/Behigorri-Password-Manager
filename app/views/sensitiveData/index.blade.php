@@ -19,18 +19,18 @@
                     <td class="col-xs-4 text-right">
                         <small>{{{ $datum->updated_at }}} ({{{ $datum->user->username }}})</small>
                     </td>
-                    <td class="col-xs-3 text-right">
+                    <td class="col-xs-3 text-right js-action-links">
                         @if ($datum->file)
-                            <span class="js-download fa-stack fa-lg" data-datum-id="{{{ $datum->id }}}">
+                            <span title="download attatched file" data-toggle="tooltip" class="js-download fa-stack fa-lg js-action-link" data-datum-id="{{{ $datum->id }}}">
                                 <i class="fa fa-circle-o fa-stack-2x"></i>
                                 <i class="fa fa-download fa-stack-1x"></i>
                             </span>
                         @endif
-                        <span class="js-decrypt fa-stack fa-lg" data-datum-id="{{{ $datum->id }}}">
+                        <span title="decrypt" class="js-decrypt fa-stack fa-lg js-action-link" data-datum-id="{{{ $datum->id }}}">
                             <i class="fa fa-circle-o fa-stack-2x"></i>
                             <i class="fa fa-unlock-alt fa-stack-1x"></i>
                         </span>
-                        <span class="js-delete fa-stack fa-lg" data-datum-id="{{{ $datum->id }}}">
+                        <span title="delete" class="js-delete fa-stack fa-lg js-action-link" data-datum-id="{{{ $datum->id }}}">
                             <i class="fa fa-circle-o fa-stack-2x"></i>
                             <i class="fa fa-times fa-stack-1x"></i>
                         </span>

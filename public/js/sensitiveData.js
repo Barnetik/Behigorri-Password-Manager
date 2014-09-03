@@ -320,5 +320,7 @@ $(document).ready(function(){
             passwordModal.download(currentElement);
         });
 
+        $('.js-action-link').tooltip();
+
     })();
 });

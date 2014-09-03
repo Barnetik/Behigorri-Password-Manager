@@ -5,3 +5,7 @@
 .js-new-form .form-group{
     margin: 2px 0px;
 }
+
+.js-action-link {
+    cursor: pointer;
+}
