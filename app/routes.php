@@ -19,7 +19,7 @@ Route::group(array('before' => 'auth'), function()
 
     Route::post('/sensitiveData/decrypt', 'SensitiveDataController@decrypt');
     Route::post('/sensitiveData/delete', 'SensitiveDataController@delete');
-    Route::get('/sensitiveData/download/{id}', 'SensitiveDataController@download');
+    Route::post('/sensitiveData/download', 'SensitiveDataController@download');
 
     Route::resource('sensitiveData', 'SensitiveDataController');
 

@@ -77,9 +77,9 @@ class SensitiveDataController extends \BaseController {
             $this->index($validator);
 	}
 
-        public function download($id)
+        public function download()
         {
-            $datum = SensitiveDatum::find($id);
+            $datum = SensitiveDatum::find(Input::get('id'));
 
             if (!$datum) {
                 throw new \Exception('Data not found');

@@ -84,12 +84,16 @@ $(document).ready(function(){
                 this.ui.valueInput.val(sensitiveDatum.value).change();
                 if (sensitiveDatum.file) {
                     this.ui.fileLink.text(sensitiveDatum.file);
-                    this.ui.fileLink.attr('href', baseUrl + '/sensitiveData/download/' + sensitiveDatum.id)
                     this.ui.fileLink.show();
                 }
             };
 
             this.ui.fileLink.hide();
+            this.ui.fileLink.on('click', function() {
+                var currentElement = $('#datum-' + self.ui.idInput.val());
+                passwordModal.download(currentElement);
+                return false;
+            });
         };
 
         var passwordModal = new function() {
@@ -118,6 +122,11 @@ $(document).ready(function(){
                 this.show(currentElement);
             };
 
+            this.download = function(currentElement) {
+                this.action = 'download';
+                this.show(currentElement);
+            };
+
             this.show = function(datumElement) {
                 var textClass = 'info';
                 var submitText = 'Decrypt Now';
@@ -129,6 +138,10 @@ $(document).ready(function(){
 
                 if (this.$el.find('.alert')) {
                     this.$el.find('.alert').alert('close');
+                }
+
+                if (this.action == 'download') {
+                    submitText = 'Download Now';
                 }
 
                 this.ui.submitButton.prop('disabled', true);
@@ -161,10 +174,16 @@ $(document).ready(function(){
                         self.$el.find('.alert').alert('close');
                     }
 
-                    if (self.action == 'delete') {
-                        self.doDelete();
-                    } else {
-                        self.doDecrypt();
+                    switch (self.action) {
+                        case 'delete':
+                            self.doDelete();
+                            break;
+                        case 'download':
+                            self.doDownload();
+                            break;
+                        default:
+                            self.doDecrypt();
+                            break;
                     }
                 }
             };
@@ -198,6 +217,28 @@ $(document).ready(function(){
                 }).done(function(data) {
                     self.hide();
                     $('#datum-' + self.ui.idField.val()).remove();
+                }).fail(function(data) {
+                    var response = JSON.parse(data.responseText);
+                    var alert = new alertMessage();
+                    alert.show(response.error.message, self.ui.modalBody);
+                });
+            };
+
+            this.doDownload = function() {
+                $.post(baseUrl + '/sensitiveData/decrypt', {
+                    id: self.ui.idField.val(),
+                    password: self.ui.passwordField.val()
+                }).done(function(data) {
+                    var id = $('<input />').attr('name', 'id');
+                    var password = $('<input />').attr('name', 'password');
+                    var theForm = $('<form />');
+                    theForm.attr('action', baseUrl + '/sensitiveData/download');
+                    theForm.attr('method', 'post');
+                    theForm.append(id).append(password);
+                    id.val(self.ui.idField.val());
+                    password.val(self.ui.passwordField.val());
+                    theForm.submit();
+                    self.hide();
                 }).fail(function(data) {
                     var response = JSON.parse(data.responseText);
                     var alert = new alertMessage();

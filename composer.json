@@ -36,7 +36,6 @@
 	},
 	"minimum-stability": "stable",
 	"require-dev": {
-		"facebook/xhprof": "dev-master",
         "way/generators": "2.*"
 	}
 }
