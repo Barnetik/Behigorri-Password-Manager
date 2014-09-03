@@ -12,7 +12,16 @@ class SensitiveDataController extends \BaseController {
 	 */
 	public function index($validator = null)
 	{
-            $sensitiveData = SensitiveDatum::all();
+            $term = '';
+            if (Input::has('query') && trim(Input::get('query'))) {
+                $term = trim(Input::get('query'));
+                $sensitiveData = SensitiveDatum::where("name", "like", "%" . $term . "%")->get();
+            } else {
+                $sensitiveData = SensitiveDatum::all();
+            }
+
+            $this->layout->query = $term;
+            
             $this->layout->content = View::make('sensitiveData.index')
                 ->with([
                     'sensitiveData' => $sensitiveData,
