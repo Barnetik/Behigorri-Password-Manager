@@ -57,7 +57,6 @@ $(document).ready(function(){
                 idInput: this.$el.find('.js-form-id'),
                 nameInput: this.$el.find('.js-form-name'),
                 valueInput: this.$el.find('.js-form-value'),
-                fileLink: this.$el.find('.js-file-link')
             };
 
             this.ui.cancelButton.on('click', function() {
@@ -75,21 +74,17 @@ $(document).ready(function(){
 
             this.reset = function() {
                 this.ui.fields.val('').change();
-                this.ui.fileLink.text('').attr('href', '');
+                $('.js-file-link').text('').attr('href', '');
             };
 
             this.setData = function(sensitiveDatum) {
                 this.ui.idInput.val(sensitiveDatum.id).change();
                 this.ui.nameInput.val(sensitiveDatum.name).change();
                 this.ui.valueInput.val(sensitiveDatum.value).change();
-                if (sensitiveDatum.file) {
-                    this.ui.fileLink.text(sensitiveDatum.file);
-                    this.ui.fileLink.show();
-                }
+                $('.js-file-link').text(sensitiveDatum.file);
             };
 
-            this.ui.fileLink.hide();
-            this.ui.fileLink.on('click', function() {
+            $('.js-file-link').on('click', function() {
                 var currentElement = $('#datum-' + self.ui.idInput.val());
                 passwordModal.download(currentElement);
                 return false;
@@ -225,18 +220,20 @@ $(document).ready(function(){
             };
 
             this.doDownload = function() {
+                // We decrypt just to check that password is ok.
                 $.post(baseUrl + '/sensitiveData/decrypt', {
                     id: self.ui.idField.val(),
                     password: self.ui.passwordField.val()
                 }).done(function(data) {
-                    var id = $('<input />').attr('name', 'id');
-                    var password = $('<input />').attr('name', 'password');
+                    // Create new form and make the request. We cannot download files via ajax :(
                     var theForm = $('<form />');
                     theForm.attr('action', baseUrl + '/sensitiveData/download');
                     theForm.attr('method', 'post');
+
+                    var id = $('<input />').attr('name', 'id').val(self.ui.idField.val());;
+                    var password = $('<input />').attr('name', 'password').val(self.ui.passwordField.val());;
                     theForm.append(id).append(password);
-                    id.val(self.ui.idField.val());
-                    password.val(self.ui.passwordField.val());
+
                     theForm.submit();
                     self.hide();
                 }).fail(function(data) {
