@@ -1,5 +1,7 @@
 <?php
 
+use Symfony\Component\HttpFoundation\File\File as SymfonyFile;
+
 class SensitiveDataController extends \BaseController {
 
 	/**
@@ -8,14 +10,15 @@ class SensitiveDataController extends \BaseController {
 	 *
 	 * @return Response
 	 */
-	public function index()
+	public function index($validator = null)
 	{
             $sensitiveData = SensitiveDatum::all();
             $this->layout->content = View::make('sensitiveData.index')
                 ->with([
-                    'sensitiveData' => $sensitiveData
+                    'sensitiveData' => $sensitiveData,
+                    'validator' => $validator
                 ]);
-            
+
             $this->layout->with('scripts', ['js/sensitiveData.js']);
 	}
 
@@ -39,13 +42,11 @@ class SensitiveDataController extends \BaseController {
 	public function store()
 	{
             $validator = Validator::make(Input::all(), array(
-//                'name' => 'required|unique:sensitiveData',
                 'name' => 'required',
-                'value' => 'required'
             ));
-            
+
             if ($validator->passes()) {
-                
+
                 if (Input::get('id')) {
                     $datum = SensitiveDatum::find(Input::get('id'));
                     if (!$datum) {
@@ -60,28 +61,59 @@ class SensitiveDataController extends \BaseController {
                 $datum->setRole($role);
                 $user = User::where('username', '=', Auth::user()->getAuthIdentifier())->first();
                 $datum->user_id = $user->id;
+
+                if (Input::hasFile('file')) {
+                    $file = Input::file('file');
+                    if ($file->isValid()) {
+                        $datum->file = $file->getClientOriginalName();
+                        $datum->file_contents = File::get($file->getPathname());
+                        unlink($file->getPathName());
+                    }
+                }
+
                 $datum->save();
-            } else {
-                var_dump($validator->messages());
             }
-            
-            $this->index();
+
+            $this->index($validator);
 	}
-        
-        public function decrypt()
+
+        public function download($id)
         {
-            $datum = SensitiveDatum::find(Input::get('id'));
-            
+            $datum = SensitiveDatum::find($id);
+
             if (!$datum) {
                 throw new \Exception('Data not found');
             }
-            
+
             $role = $this->getCurrentRole();
             $datum->setRole($role);
             $datum->decrypt(Input::get('password'));
-            return $datum->toJSON();
+
+            $tmpFile = tempnam(sys_get_temp_dir(), 'behigorri_');
+            file_put_contents($tmpFile, $datum->file_contents);
+            $filename = $datum->file;
+
+            App::finish(function($request, $response) use ($tmpFile) {
+                unlink($tmpFile);
+            });
+
+            return Response::download($tmpFile, $filename);
         }
-        
+
+        public function decrypt()
+        {
+            $datum = SensitiveDatum::find(Input::get('id'));
+
+            if (!$datum) {
+                throw new \Exception('Data not found');
+            }
+
+            $role = $this->getCurrentRole();
+            $datum->setRole($role);
+            $datum->decrypt(Input::get('password'));
+            return $datum->toJson();
+        }
+
         public function delete()
         {
             $datum = SensitiveDatum::find(Input::get('id'));
@@ -89,15 +121,15 @@ class SensitiveDataController extends \BaseController {
             if (!$datum) {
                 throw new \Exception('Data not found');
             }
-            
+
             $role = $this->getCurrentRole();
             $datum->setRole($role);
             $datum->decrypt(Input::get('password'));
             $datum->delete();
-            
+
             return Response::make('', 204);
         }
-        
+
         protected function getCurrentRole()
         {
             return Role::find(1);

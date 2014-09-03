@@ -16,14 +16,15 @@ Route::group(array('before' => 'auth'), function()
     Route::get('/', function() {
         return Redirect::to('sensitiveData');
     });
-    
+
     Route::post('/sensitiveData/decrypt', 'SensitiveDataController@decrypt');
     Route::post('/sensitiveData/delete', 'SensitiveDataController@delete');
-    
+    Route::get('/sensitiveData/download/{id}', 'SensitiveDataController@download');
+
     Route::resource('sensitiveData', 'SensitiveDataController');
 
     Route::get('/logout', 'LogoutController@logout');
-    
+
 });
 
 
