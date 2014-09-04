@@ -228,15 +228,19 @@ $(document).ready(function(){
                     password: self.ui.passwordField.val()
                 }).done(function(data) {
                     // Create new form and make the request. We cannot download files via ajax :(
+                    // We also need to append this to the DOM to make it work in firefox
                     var theForm = $('<form />');
+                    $('body').append(theForm);
                     theForm.attr('action', baseUrl + '/sensitiveData/download');
                     theForm.attr('method', 'post');
+                    theForm.hide();
 
-                    var id = $('<input />').attr('name', 'id').val(self.ui.idField.val());;
-                    var password = $('<input />').attr('name', 'password').val(self.ui.passwordField.val());;
+                    var id = $('<input />').attr('name', 'id').val(self.ui.idField.val());
+                    var password = $('<input />').attr('name', 'password').val(self.ui.passwordField.val());
                     theForm.append(id).append(password);
-
                     theForm.submit();
+
+                    theForm.remove();
                     self.hide();
                 }).fail(function(data) {
                     var response = JSON.parse(data.responseText);
