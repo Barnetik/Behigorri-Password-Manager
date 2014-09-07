@@ -21,7 +21,7 @@ class SensitiveDataController extends \BaseController {
             }
 
             $this->layout->query = $term;
-            
+
             $this->layout->content = View::make('sensitiveData.index')
                 ->with([
                     'sensitiveData' => $sensitiveData,
@@ -119,8 +119,19 @@ class SensitiveDataController extends \BaseController {
 
             $role = $this->getCurrentRole();
             $datum->setRole($role);
-            $datum->decrypt(Input::get('password'));
-            return $datum->toJson();
+            try {
+                $datum->decrypt(Input::get('password'));
+                return $datum->toJson();
+            } catch (\Exception $e) {
+                return Response::json(
+                    array(
+                        'error' => array(
+                            'message' => $e->getMessage()
+                        )
+                    ),
+                    500
+                );
+            }
         }
 
         public function delete()
