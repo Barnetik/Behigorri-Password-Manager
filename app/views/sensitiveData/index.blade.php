@@ -19,12 +19,18 @@
                     <td class="col-xs-4 text-right">
                         <small>{{{ $datum->updated_at }}} ({{{ $datum->user->username }}})</small>
                     </td>
-                    <td class="col-xs-3 text-right">
-                        <span class="js-decrypt fa-stack fa-lg" data-datum-id="{{{ $datum->id }}}">
+                    <td class="col-xs-3 text-right js-action-links">
+                        @if ($datum->file)
+                            <span title="download attatched file" data-toggle="tooltip" class="js-download fa-stack fa-lg js-action-link" data-datum-id="{{{ $datum->id }}}">
+                                <i class="fa fa-circle-o fa-stack-2x"></i>
+                                <i class="fa fa-download fa-stack-1x"></i>
+                            </span>
+                        @endif
+                        <span title="decrypt" class="js-decrypt fa-stack fa-lg js-action-link" data-datum-id="{{{ $datum->id }}}">
                             <i class="fa fa-circle-o fa-stack-2x"></i>
                             <i class="fa fa-unlock-alt fa-stack-1x"></i>
                         </span>
-                        <span class="js-delete fa-stack fa-lg" data-datum-id="{{{ $datum->id }}}">
+                        <span title="delete" class="js-delete fa-stack fa-lg js-action-link" data-datum-id="{{{ $datum->id }}}">
                             <i class="fa fa-circle-o fa-stack-2x"></i>
                             <i class="fa fa-times fa-stack-1x"></i>
                         </span>
@@ -58,20 +64,20 @@
                         <div class="col-xs-12">
                             {{ Form::open(array('method' => 'post', 'files' => true)) }}
                                 {{ Form::input('hidden', 'id', null, array('class' => 'js-form-id')) }}
-                                <div class="controls controls-row">
-                                    {{ Form::input('text', 'name', null, array('class' => 'col-xs-6 form-control js-form-name', 'placeholder' => 'Description'))}}
+                                <div class="form-group">
+                                    {{ Form::input('text', 'name', null, array('class' => 'form-control js-form-name', 'placeholder' => 'Description'))}}
                                     {{ Form::errorMsg($validator, 'name')}}
                                 </div>
-                                <div class="controls">
-                                    {{ Form::textarea('value', null, array('class' => 'col-xs-6 form-control js-form-value', 'placeholder' => 'Sensitive data', 'rows' => '15'))}}
+                                <div class="form-group">
+                                    {{ Form::textarea('value', null, array('class' => 'form-control js-form-value', 'placeholder' => 'Sensitive data', 'rows' => '15'))}}
                                     {{ Form::errorMsg($validator, 'value')}}
                                 </div>
-                                <div class="controls">
+                                <div class="form-group">
                                     <a href="#" class="js-file-link"></a>
-                                    {{ Form::file('file', null, array('class' => 'col-xs-6 form-control js-form-value', 'placeholder' => 'Sensitive data', 'rows' => '15'))}}
+                                    {{ Form::file('file', null, array('class' => 'form-control js-form-value', 'placeholder' => 'Sensitive data', 'rows' => '15'))}}
                                     {{ Form::errorMsg($validator, 'file')}}
                                 </div>
-                                <div class="controls">
+                                <div class="form-group">
                                     <button type="submit" class="btn btn-primary input-medium pull-right">Send</button>
                                     <button type="reset" class="btn btn-warning input-medium pull-right js-add-new-cancel">Cancel</button>
                                 </div>

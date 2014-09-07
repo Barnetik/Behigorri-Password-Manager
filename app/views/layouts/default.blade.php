@@ -12,10 +12,10 @@
             <script src="{{ asset($script) }}"></script>
         @endforeach
     @endif
-    
+
     <base href="{{ URL::to('/') }}" />
     <body>
-        
+
         <nav class="navbar navbar-default" role="navigation">
             <div class="container-fluid">
                 <!-- Brand and toggle get grouped for better mobile display -->
@@ -32,12 +32,12 @@
                 @if (Auth::check())
                 <!-- Collect the nav links, forms, and other content for toggling -->
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                    <form class="navbar-form navbar-left" role="search">
+                    {{ Form::open(array('method' => 'get', 'class' => 'navbar-form navbar-left', 'role' => 'search'))}}
                         <div class="form-group">
-                            <input type="text" class="form-control" placeholder="Search">
+                            {{ Form::input('text', 'query', $query, array('class' => 'form-control', 'placeholder' => 'Search'))}}
                         </div>
                         <button type="submit" class="btn btn-default">Submit</button>
-                    </form>
+                    {{ Form::close() }}
                     <ul class="nav navbar-nav navbar-right">
                         <li><span class="navbar-text">{{ Auth::user()->getAuthIdentifier() }}</span></li>
                         <li><a href="{{ URL::to('logout') }}">Logout</a></li>
