@@ -83,7 +83,16 @@ class SensitiveDataController extends \BaseController {
                 $datum->save();
             }
 
-            $this->index($validator);
+            if (Request::ajax()) {
+                if ($validator->fails()) {
+                    return $this->_ajaxError($validator->messages()->all(), 400);
+                }
+
+                return $datum->toJson();
+
+            } else {
+                $this->index($validator);
+            }
 	}
 
         public function download()
@@ -123,14 +132,7 @@ class SensitiveDataController extends \BaseController {
                 $datum->decrypt(Input::get('password'));
                 return $datum->toJson();
             } catch (\Exception $e) {
-                return Response::json(
-                    array(
-                        'error' => array(
-                            'message' => $e->getMessage()
-                        )
-                    ),
-                    500
-                );
+                return $this->_ajaxError($e->getMessage(), 500);
             }
         }
 
@@ -202,5 +204,17 @@ class SensitiveDataController extends \BaseController {
 	{
 		//
 	}
+
+        protected function _ajaxError($message, $code)
+        {
+            return Response::json(
+                array(
+                    'error' => array(
+                        'message' => $message
+                    )
+                ),
+                $code
+            );
+        }
 
 }
