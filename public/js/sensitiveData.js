@@ -111,9 +111,9 @@ $(document).ready(function(){
                     function(data) {
                         var alert = new alertMessage('success');
                         if (self.ui.idInput.val()) {
-                            alert.show('Data updated', self.ui.alertBox);
+                            alert.show('Data updated', self.ui.alertBox, 2000);
                         } else  {
-                            alert.show('New data created', self.ui.alertBox);
+                            alert.show('New data created', self.ui.alertBox, 2000);
                             self.ui.idInput.val(data.id);
                         }
                     },
@@ -305,15 +305,27 @@ $(document).ready(function(){
             var self = this;
             var severity = severity || 'warning';
 
-            this.alertWrapper = $('<div />').addClass('alert alert-' + severity + ' alert-dismissable fade in');
-            this.alertWrapper.append(
+            var alertWrapper = $('<div />').addClass('alert alert-' + severity + ' alert-dismissable fade in');
+            alertWrapper.append(
                 $('<button data-dismiss="alert"/>').attr('type', 'button').addClass('close').prop('aria-hidden', true).text("x")
             );
 
-            this.show = function(message, context) {
-                this.alertWrapper.append(message);
-                context.prepend(this.alertWrapper);
-                this.alertWrapper.alert();
+            this.show = function(message, context, timeout) {
+                if (context.find('.alert').length > 0) {
+                    context.find('.alert').alert('close');
+                }
+                alertWrapper.append(message);
+                context.prepend(alertWrapper);
+                alertWrapper.alert();
+
+                if (timeout) {
+                    setTimeout(
+                        function() {
+                            alertWrapper.alert('close');
+                        },
+                        timeout
+                    );
+                }
             };
         };
 
