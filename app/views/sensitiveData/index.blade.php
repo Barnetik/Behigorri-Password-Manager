@@ -64,8 +64,11 @@
                         <div class="col-xs-12">
                             {{ Form::open(array('method' => 'post', 'files' => true)) }}
                                 {{ Form::input('hidden', 'id', null, array('class' => 'js-form-id')) }}
+                                <div class="row">
+                                    <div class="js-alert-box col-xs-12"></div>
+                                </div>
                                 <div class="form-group">
-                                    {{ Form::input('text', 'name', null, array('class' => 'form-control js-form-name', 'placeholder' => 'Description'))}}
+                                    {{ Form::input('text', 'name', null, array('class' => 'form-control js-form-name', 'placeholder' => 'Name'))}}
                                     {{ Form::errorMsg($validator, 'name')}}
                                 </div>
                                 <div class="form-group">
@@ -77,9 +80,10 @@
                                     {{ Form::file('file', null, array('class' => 'form-control js-form-value', 'placeholder' => 'Sensitive data', 'rows' => '15'))}}
                                     {{ Form::errorMsg($validator, 'file')}}
                                 </div>
-                                <div class="form-group">
-                                    <button type="submit" class="btn btn-primary input-medium pull-right">Send</button>
+                                <div class="form-group js-add-new-buttons">
+                                    <button type="submit" class="btn btn-primary input-medium pull-right js-add-new-send">Send</button>
                                     <button type="reset" class="btn btn-warning input-medium pull-right js-add-new-cancel">Cancel</button>
+                                    <i class="fa fa-spinner fa-spin hide pull-right"></i>
                                 </div>
                             {{ Form::close() }}
                         </div>

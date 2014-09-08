@@ -52,12 +52,17 @@ $(document).ready(function(){
             this.$el = $('.js-new-form');
 
             this.ui = {
+                form: this.$el.find('form'),
+                loading: this.$el.find('.js-add-new-buttons .fa-spinner'),
+                buttons: this.$el.find('button'),
+                sendButton: this.$el.find('.js-add-new-send'),
                 cancelButton: this.$el.find('.js-add-new-cancel'),
                 fields: this.$el.find('input,textarea'),
                 idInput: this.$el.find('.js-form-id'),
                 nameInput: this.$el.find('.js-form-name'),
                 valueInput: this.$el.find('.js-form-value'),
-                fileLinks: $(this.$el.parents('.tab-content')[0]).find('.js-file-link')
+                fileLinks: $(this.$el.parents('.tab-content')[0]).find('.js-file-link'),
+                alertBox: this.$el.find('.js-alert-box')
             };
 
             this.ui.cancelButton.on('click', function() {
@@ -85,12 +90,54 @@ $(document).ready(function(){
                 this.ui.fileLinks.text(sensitiveDatum.file);
             };
 
+            this.ui.loading.hide = function() {
+                if (!self.ui.loading.hasClass('hide')) {
+                    self.ui.loading.addClass('hide');
+                }
+            }
+
+            this.ui.loading.show = function() {
+                if (self.ui.loading.hasClass('hide')) {
+                    self.ui.loading.removeClass('hide');
+                }
+            };
+
+            this.submit = function() {
+                this.ui.loading.show();
+                this.ui.buttons.prop('disabled', true);
+                $.post(
+                    this.ui.form.attr('action'),
+                    this.ui.form.serialize(),
+                    function(data) {
+                        var alert = new alertMessage('success');
+                        if (self.ui.idInput.val()) {
+                            alert.show('Data updated', self.ui.alertBox);
+                        } else  {
+                            alert.show('New data created', self.ui.alertBox);
+                            self.ui.idInput.val(data.id);
+                        }
+                    },
+                    'json'
+                ).fail(function(data) {
+                    var response = JSON.parse(data.responseText);
+                    var alert = new alertMessage();
+                    alert.show(response.error.message, self.ui.alertBox);
+                }).always(function(){
+                    self.ui.loading.hide();
+                    self.ui.buttons.prop('disabled', false);
+                });
+            };
+
             this.ui.fileLinks.click(function(e) {
                 e.preventDefault();
                 var currentElement = $('#datum-' + self.ui.idInput.val());
                 passwordModal.download(currentElement);
             });
 
+            this.ui.form.on('submit', function(e) {
+                e.preventDefault();
+                self.submit();
+            });
         };
 
         var passwordModal = new function() {
@@ -192,15 +239,19 @@ $(document).ready(function(){
             });
 
             this.doDecrypt = function() {
-                $.post(baseUrl + '/sensitiveData/decrypt', {
-                    id: self.ui.idField.val(),
-                    password: self.ui.passwordField.val()
-                }).done(function(data) {
-                    var sensitiveDatum = JSON.parse(data);
-                    newForm.setData(sensitiveDatum);
-                    newForm.show('markdown');
-                    self.hide();
-                }).fail(function(data) {
+                $.post(
+                    baseUrl + '/sensitiveData/decrypt',
+                    {
+                        id: self.ui.idField.val(),
+                        password: self.ui.passwordField.val()
+                    },
+                    function(data) {
+                        newForm.setData(data);
+                        newForm.show('markdown');
+                        self.hide();
+                    },
+                    'json'
+                ).fail(function(data) {
                     var response = JSON.parse(data.responseText);
                     var alert = new alertMessage();
                     alert.show(response.error.message, self.ui.modalBody);
@@ -250,10 +301,11 @@ $(document).ready(function(){
             };
         };
 
-        var alertMessage = function() {
+        var alertMessage = function(severity) {
             var self = this;
+            var severity = severity || 'warning';
 
-            this.alertWrapper = $('<div />').addClass('alert alert-warning alert-dismissable fade in');
+            this.alertWrapper = $('<div />').addClass('alert alert-' + severity + ' alert-dismissable fade in');
             this.alertWrapper.append(
                 $('<button data-dismiss="alert"/>').attr('type', 'button').addClass('close').prop('aria-hidden', true).text("x")
             );
@@ -318,7 +370,6 @@ $(document).ready(function(){
         });
 
         $('.js-download').click(function(e) {
-            console.log("hola");
             var currentButton = $(e.currentTarget);
             var currentElement = $('#datum-' + currentButton.data('datumId'));
             passwordModal.download(currentElement);
