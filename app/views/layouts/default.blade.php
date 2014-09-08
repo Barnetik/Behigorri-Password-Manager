@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html>
     <link rel="stylesheet" type="text/css" href="{{ asset('bower_components/bootstrap/dist/css/bootstrap.min.css') }}" />
-    <link rel="stylesheet" type="text/css" href="{{ asset('bower_components/bootstrap/dist/css/bootstrap-theme.min.css') }}" />
+    <link rel="stylesheet" type="text/css" href="{{ asset('bower_components/jquery-file-upload/css/jquery.fileupload.css') }}" />
     <link rel="stylesheet" type="text/css" href="{{ asset('bower_components/fontawesome/css/font-awesome.min.css') }}" />
     <link rel="stylesheet" type="text/css" href="{{ asset('css/behigorri.css') }}" />
     <script type="text/javascript" src="{{ asset('bower_components/jquery/dist/jquery.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('bower_components/jquery-file-upload/js/vendor/jquery.ui.widget.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('bower_components/jquery-file-upload/js/jquery.fileupload.js') }}"></script>
     <script type="text/javascript" src="{{ asset('bower_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
     <script type="text/javascript" src="{{ asset('bower_components/markdown/lib/markdown.js') }}"></script>
     @if (isset($scripts))
