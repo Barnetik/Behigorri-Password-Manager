@@ -19,6 +19,6 @@
     "bootstrap": "~3.2.*",
     "fontawesome": "~4.1.0",
     "markdown": "~0.5.0",
-    "jquery-file-upload": "~9.7.1"
+    "fineuploader-dist": "~5.0.3"
   }
 }

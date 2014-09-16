@@ -46,10 +46,33 @@ $(document).ready(function(){
             this.init();
         };
 
+        var sensitiveDataList = new function() {
+            var self = this;
+
+            this.$el = $('.js-sensitive-data-list');
+
+            this.ui = {
+                sampleRow: this.$el.find('.js-sample-data-row')
+            };
+
+            this.createRow = function(data) {
+                var loggedUser = $('#logged-user').text();
+                var newRow = this.ui.sampleRow.clone();
+                newRow.attr('id', 'datum-' + data.id);
+                newRow.data('id', data.id);
+                newRow.find('.js-datum-name').html(data.name);
+                newRow.find('.js-datum-metadata small').html(data.updated_at + ' (' + loggedUser + ')');
+                newRow.removeClass('.js-sample-data-row').removeClass('hide');
+                this.$el.prepend(newRow);
+            };
+        };
+
         var newForm = new function() {
             var self = this;
 
             this.$el = $('.js-new-form');
+
+            this.hasFiles = false;
 
             this.ui = {
                 form: this.$el.find('form'),
@@ -61,9 +84,10 @@ $(document).ready(function(){
                 idInput: this.$el.find('.js-form-id'),
                 nameInput: this.$el.find('.js-form-name'),
                 valueInput: this.$el.find('.js-form-value'),
-                fileInput: this.$el.find('[name=file]'),
+//                fileInput: this.$el.find('[name=file]'),
                 fileLinks: $(this.$el.parents('.tab-content')[0]).find('.js-file-link'),
-                alertBox: this.$el.find('.js-alert-box')
+                alertBox: this.$el.find('.js-alert-box'),
+                fileField: $('#form-fineupload')
             };
 
             this.ui.cancelButton.on('click', function() {
@@ -95,7 +119,7 @@ $(document).ready(function(){
                 if (!self.ui.loading.hasClass('hide')) {
                     self.ui.loading.addClass('hide');
                 }
-            }
+            };
 
             this.ui.loading.show = function() {
                 if (self.ui.loading.hasClass('hide')) {
@@ -103,31 +127,103 @@ $(document).ready(function(){
                 }
             };
 
+            this.hasFiles = function() {
+                return self.ui.fileField.fineUploader('getUploads').length > 0;
+            };
+
             this.submit = function() {
                 this.ui.loading.show();
                 this.ui.buttons.prop('disabled', true);
-                this.$el.fileupload('send', {fileInput: self.ui.fileInput})
-                    .success(function(data) {
-                        var alert = new alertMessage('success');
-                        if (self.ui.idInput.val()) {
-                            alert.show('Data updated', self.ui.alertBox, 3000);
-                        } else  {
-                            alert.show('New data created', self.ui.alertBox, 3000);
-                            self.ui.idInput.val(data.id);
-                        }
-                    }).fail(function(data) {
+
+                if (self.hasFiles()) {
+                    this.ui.fileField.fineUploader('uploadStoredFiles');
+                } else {
+                    $.post(
+                        this.ui.form.attr('action'),
+                        this.ui.form.serialize(),
+                        function(data) {
+                            var alert = new alertMessage('success');
+                            if (self.ui.idInput.val()) {
+                                alert.show('Data updated', self.ui.alertBox, 3000);
+                            } else  {
+                                alert.show('New data created', self.ui.alertBox, 3000);
+                                self.ui.idInput.val(data.id);
+                                sensitiveDataList.createRow(data);
+                            }
+                        },
+                        'json'
+                    ).fail(function(data) {
                         var response = JSON.parse(data.responseText);
                         var alert = new alertMessage();
                         alert.show(response.error.message, self.ui.alertBox);
-                    }).complete(function(){
+                    }).always(function(){
                         self.ui.loading.hide();
                         self.ui.buttons.prop('disabled', false);
                     });
-
+                }
             };
+                ////                console.log();
 
-            this.$el.fileupload({
-                autoUpload: false
+//                if (this.hasFiles) {
+//                    this.$el.fileupload(
+//                        'send',
+//                        {fileInput: self.ui.fileInput}
+//                    ).success(function(data) {
+//                        var alert = new alertMessage('success');
+//                        if (self.ui.idInput.val()) {
+//                            alert.show('Data updated', self.ui.alertBox, 3000);
+//                        } else  {
+//                            alert.show('New data created', self.ui.alertBox, 3000);
+//                            var jsonData = JSON.parse(data);
+//                            self.ui.idInput.val(jsonData.id);
+//                            sensitiveDataList.createRow(jsonData);
+//                        }
+//                        self.ui.loading.hide();
+//                        self.ui.buttons.prop('disabled', false);
+//                    }).fail(function(data) {
+//                        var response = JSON.parse(data.responseText);
+//                        var alert = new alertMessage();
+//                        alert.show(response.error.message, self.ui.alertBox);
+//
+//                        self.ui.loading.hide();
+//                        self.ui.buttons.prop('disabled', false);
+//                    });
+//                } else {
+
+//                }
+//            };
+
+            this.ui.fileField.fineUploader({
+                multiple: false,
+                form: {
+                    interceptSubmit: false
+                }
+            }).on('error', function(event, id, name, errorReason, response){
+                console.log(event, id, name, errorReason, response);
+
+                var alert = new alertMessage();
+                alert.show(response.error.message, self.ui.alertBox);
+
+                self.ui.loading.hide();
+                self.ui.buttons.prop('disabled', false);
+            }).on('complete', function(event, id, name, data){
+                if (data.success) {
+                    var alert = new alertMessage('success');
+                    if (self.ui.idInput.val()) {
+                        alert.show('Data updated', self.ui.alertBox, 3000);
+                    } else  {
+                        alert.show('New data created', self.ui.alertBox, 3000);
+                        self.ui.idInput.val(data.id);
+                        sensitiveDataList.createRow(data);
+                    }
+                }
+                self.ui.loading.hide();
+                self.ui.buttons.prop('disabled', false);
+            });
+
+            this.$el.on('submit', function(e) {
+                e.preventDefault();
+                self.submit();
             });
 
             this.ui.fileLinks.click(function(e) {
@@ -136,10 +232,6 @@ $(document).ready(function(){
                 passwordModal.download(currentElement);
             });
 
-            this.ui.form.on('submit', function(e) {
-                e.preventDefault();
-                self.submit();
-            });
         };
 
         var passwordModal = new function() {

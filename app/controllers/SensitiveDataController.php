@@ -66,13 +66,14 @@ class SensitiveDataController extends \BaseController {
                 }
 
                 $role = $this->getCurrentRole();
+
                 $datum->fill(Input::all());
                 $datum->setRole($role);
                 $user = User::where('username', '=', Auth::user()->getAuthIdentifier())->first();
                 $datum->user_id = $user->id;
 
-                if (Input::hasFile('file')) {
-                    $file = Input::file('file');
+                if (Input::hasFile('qqfile')) {
+                    $file = Input::file('qqfile');
                     if ($file->isValid()) {
                         $datum->file = $file->getClientOriginalName();
                         $datum->file_contents = File::get($file->getPathname());
@@ -88,7 +89,7 @@ class SensitiveDataController extends \BaseController {
                     return $this->_ajaxError($validator->messages()->all(), 400);
                 }
 
-                return $datum->toJson();
+                return $datum->toJsonWithSuccess();
 
             } else {
                 $this->index($validator);
