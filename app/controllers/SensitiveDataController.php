@@ -66,13 +66,14 @@ class SensitiveDataController extends \BaseController {
                 }
 
                 $role = $this->getCurrentRole();
+
                 $datum->fill(Input::all());
                 $datum->setRole($role);
                 $user = User::where('username', '=', Auth::user()->getAuthIdentifier())->first();
                 $datum->user_id = $user->id;
 
-                if (Input::hasFile('file')) {
-                    $file = Input::file('file');
+                if (Input::hasFile('qqfile')) {
+                    $file = Input::file('qqfile');
                     if ($file->isValid()) {
                         $datum->file = $file->getClientOriginalName();
                         $datum->file_contents = File::get($file->getPathname());
@@ -83,7 +84,16 @@ class SensitiveDataController extends \BaseController {
                 $datum->save();
             }
 
-            $this->index($validator);
+            if (Request::ajax()) {
+                if ($validator->fails()) {
+                    return $this->_ajaxError($validator->messages()->all(), 400);
+                }
+
+                return $datum->toJsonWithSuccess();
+
+            } else {
+                $this->index($validator);
+            }
 	}
 
         public function download()
@@ -123,14 +133,7 @@ class SensitiveDataController extends \BaseController {
                 $datum->decrypt(Input::get('password'));
                 return $datum->toJson();
             } catch (\Exception $e) {
-                return Response::json(
-                    array(
-                        'error' => array(
-                            'message' => $e->getMessage()
-                        )
-                    ),
-                    500
-                );
+                return $this->_ajaxError($e->getMessage(), 500);
             }
         }
 
@@ -202,5 +205,17 @@ class SensitiveDataController extends \BaseController {
 	{
 		//
 	}
+
+        protected function _ajaxError($message, $code)
+        {
+            return Response::json(
+                array(
+                    'error' => array(
+                        'message' => $message
+                    )
+                ),
+                $code
+            );
+        }
 
 }

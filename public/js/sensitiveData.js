@@ -46,24 +46,94 @@ $(document).ready(function(){
             this.init();
         };
 
+        var sensitiveDataList = new function() {
+            var self = this;
+
+            this.$el = $('.js-sensitive-data-list');
+
+            this.ui = {
+                sampleRow: this.$el.find('.js-sample-data-row')
+            };
+
+            this.createRow = function(data) {
+                var loggedUser = $('#logged-user').text();
+                var newRow = this.ui.sampleRow.clone();
+
+                if (!data.file) {
+                    newRow.find('.js-download').remove();
+                }
+
+                newRow.attr('id', 'datum-' + data.id);
+                newRow.data('datumId', data.id);
+                newRow.find('.js-datum-name').html(data.name);
+                newRow.find('.js-datum-metadata small').html(data.updated_at + ' (' + loggedUser + ')');
+                newRow.find('.js-download,.js-decrypt,.js-delete').data('datumId', data.id)
+                newRow.removeClass('.js-sample-data-row').removeClass('hide');
+
+                this.$el.prepend(newRow);
+
+                newRow.find('.js-action-link').tooltip();
+            };
+
+            this.updateRow = function(data) {
+                var loggedUser = $('#logged-user').text();
+                var currentRow = this.$el.find('#datum-' + data.id);
+                currentRow.find('.js-datum-name').html(data.name);
+                currentRow.find('.js-datum-metadata small').html(data.updated_at + ' (' + loggedUser + ')');
+                if (data.file) {
+                    if (currentRow.find('.js-download').length === 0) {
+                        var downloadLink = this.ui.sampleRow.find('.js-download').clone();
+                        downloadLink.data('datumId', data.id);
+                        currentRow.find('.js-action-links').prepend(downloadLink);
+                    }
+                }
+            };
+
+            // Show decrypt modal
+            this.$el.on('click', '.js-decrypt', function(e) {
+                var currentButton = $(e.currentTarget);
+                var currentElement = $('#datum-' + currentButton.data('datumId'));
+                passwordModal.decrypt(currentElement);
+            });
+
+            // Show delete modal
+            this.$el.on('click', '.js-delete', function(e) {
+                var currentButton = $(e.currentTarget);
+                var currentElement = $('#datum-' + currentButton.data('datumId'));
+                passwordModal.delete(currentElement);
+            });
+
+            // Show download modal
+            this.$el.on('click', '.js-download', function(e) {
+                var currentButton = $(e.currentTarget);
+                var currentElement = $('#datum-' + currentButton.data('datumId'));
+                passwordModal.download(currentElement);
+            });
+
+            $('.js-action-link').tooltip();
+        };
+
         var newForm = new function() {
             var self = this;
 
             this.$el = $('.js-new-form');
 
+            this.hasFiles = false;
+
             this.ui = {
+                form: this.$el.find('form'),
+                loading: this.$el.find('.js-add-new-buttons .fa-spinner'),
+                buttons: this.$el.find('input:submit,input:reset'),
+                sendButton: this.$el.find('.js-add-new-send'),
                 cancelButton: this.$el.find('.js-add-new-cancel'),
-                fields: this.$el.find('input,textarea'),
+                fields: this.$el.find('input,textarea').not('input:submit,input:reset'),
                 idInput: this.$el.find('.js-form-id'),
                 nameInput: this.$el.find('.js-form-name'),
                 valueInput: this.$el.find('.js-form-value'),
-                fileLinks: $(this.$el.parents('.tab-content')[0]).find('.js-file-link')
+                fileLinks: $(this.$el.parents('.tab-content')[0]).find('.js-file-link'),
+                alertBox: this.$el.find('.js-alert-box'),
+                fileField: $('#form-fineupload')
             };
-
-            this.ui.cancelButton.on('click', function() {
-                self.reset();
-                self.hide();
-            });
 
             this.show = function(tabName) {
                 sensitiveArea.show(tabName);
@@ -75,15 +145,111 @@ $(document).ready(function(){
 
             this.reset = function() {
                 this.ui.fields.val('').change();
-                $('.js-file-link').text('').attr('href', '');
+                this.ui.fileLinks.text('').attr('href', '');
+                var qqFileList = this.$el.find('ul.qq-upload-list');
+                if (qqFileList.length > 0) {
+                    qqFileList.html('');
+                }
             };
 
             this.setData = function(sensitiveDatum) {
+                this.reset();
                 this.ui.idInput.val(sensitiveDatum.id).change();
                 this.ui.nameInput.val(sensitiveDatum.name).change();
                 this.ui.valueInput.val(sensitiveDatum.value).change();
                 this.ui.fileLinks.text(sensitiveDatum.file);
             };
+
+            this.ui.loading.hide = function() {
+                if (!self.ui.loading.hasClass('hide')) {
+                    self.ui.loading.addClass('hide');
+                }
+            };
+
+            this.ui.loading.show = function() {
+                if (self.ui.loading.hasClass('hide')) {
+                    self.ui.loading.removeClass('hide');
+                }
+            };
+
+            this.hasFiles = function() {
+                return self.ui.fileField.fineUploader('getUploads').length > 0;
+            };
+
+            this.submitSuccess = function(data) {
+                if (data.success) {
+                    var alert = new alertMessage('success');
+                    if (self.ui.idInput.val()) {
+                        alert.show('Data updated', self.ui.alertBox, 3000);
+                        sensitiveDataList.updateRow(data);
+                    } else  {
+                        alert.show('New data created', self.ui.alertBox, 3000);
+                        self.ui.idInput.val(data.id);
+                        sensitiveDataList.createRow(data);
+                    }
+                    if (data.file) {
+                       self.ui.fileLinks.text(data.file);
+                    }
+                }
+            };
+
+            this.submitError = function(response) {
+                var alert = new alertMessage();
+                alert.show(response.error.message, self.ui.alertBox, 3000);
+            };
+
+            this.ui.fileField.fineUploader({
+                multiple: false,
+                form: {
+                    interceptSubmit: false
+                },
+                validation: {
+                    sizeLimit: 15000000
+                }
+            }).on('error', function(event, id, name, errorReason, response){
+                console.log(event, id, name, errorReason, response);
+                self.submitError(response);
+                self.ui.fileField.fineUploader('reset');
+                self.ui.loading.hide();
+                self.ui.buttons.prop('disabled', false);
+            }).on('complete', function(event, id, name, data){
+                self.submitSuccess(data);
+                self.ui.fileField.fineUploader('reset');
+                self.ui.loading.hide();
+                self.ui.buttons.prop('disabled', false);
+            });
+
+            this.submit = function() {
+                this.ui.loading.show();
+                this.ui.buttons.prop('disabled', true);
+
+                if (self.hasFiles()) {
+                    this.ui.fileField.fineUploader('uploadStoredFiles');
+                } else {
+                    $.post(
+                        this.ui.form.attr('action'),
+                        this.ui.form.serialize(),
+                        self.submitSuccess,
+                        'json'
+                    ).fail(function(data) {
+                        var response = JSON.parse(data.responseText);
+                        self.submitError(response);
+                    }).always(function(){
+                        self.ui.loading.hide();
+                        self.ui.buttons.prop('disabled', false);
+                    });
+                }
+            };
+
+            this.$el.on('submit', function(e) {
+                e.preventDefault();
+                self.submit();
+            });
+
+            this.ui.cancelButton.on('click', function() {
+                self.reset();
+                self.hide();
+            });
 
             this.ui.fileLinks.click(function(e) {
                 e.preventDefault();
@@ -192,15 +358,19 @@ $(document).ready(function(){
             });
 
             this.doDecrypt = function() {
-                $.post(baseUrl + '/sensitiveData/decrypt', {
-                    id: self.ui.idField.val(),
-                    password: self.ui.passwordField.val()
-                }).done(function(data) {
-                    var sensitiveDatum = JSON.parse(data);
-                    newForm.setData(sensitiveDatum);
-                    newForm.show('markdown');
-                    self.hide();
-                }).fail(function(data) {
+                $.post(
+                    baseUrl + '/sensitiveData/decrypt',
+                    {
+                        id: self.ui.idField.val(),
+                        password: self.ui.passwordField.val()
+                    },
+                    function(data) {
+                        newForm.setData(data);
+                        newForm.show('markdown');
+                        self.hide();
+                    },
+                    'json'
+                ).fail(function(data) {
                     var response = JSON.parse(data.responseText);
                     var alert = new alertMessage();
                     alert.show(response.error.message, self.ui.modalBody);
@@ -250,18 +420,31 @@ $(document).ready(function(){
             };
         };
 
-        var alertMessage = function() {
+        var alertMessage = function(severity) {
             var self = this;
+            var severity = severity || 'warning';
 
-            this.alertWrapper = $('<div />').addClass('alert alert-warning alert-dismissable fade in');
-            this.alertWrapper.append(
+            var alertWrapper = $('<div />').addClass('alert alert-' + severity + ' alert-dismissable fade in');
+            alertWrapper.append(
                 $('<button data-dismiss="alert"/>').attr('type', 'button').addClass('close').prop('aria-hidden', true).text("x")
             );
 
-            this.show = function(message, context) {
-                this.alertWrapper.append(message);
-                context.prepend(this.alertWrapper);
-                this.alertWrapper.alert();
+            this.show = function(message, context, timeout) {
+                if (context.find('.alert').length > 0) {
+                    context.find('.alert').alert('close');
+                }
+                alertWrapper.append(message);
+                context.prepend(alertWrapper);
+                alertWrapper.alert();
+
+                if (timeout) {
+                    setTimeout(
+                        function() {
+                            alertWrapper.alert('close');
+                        },
+                        timeout
+                    );
+                }
             };
         };
 
@@ -302,29 +485,5 @@ $(document).ready(function(){
                 self.ui.body.html($(this).val());
             });
         };
-
-        // Show decrypt modal
-        $('.js-decrypt').click(function(e) {
-            var currentButton = $(e.currentTarget);
-            var currentElement = $('#datum-' + currentButton.data('datumId'));
-            passwordModal.decrypt(currentElement);
-        });
-
-        // Show decrypt modal
-        $('.js-delete').click(function(e) {
-            var currentButton = $(e.currentTarget);
-            var currentElement = $('#datum-' + currentButton.data('datumId'));
-            passwordModal.delete(currentElement);
-        });
-
-        $('.js-download').click(function(e) {
-            console.log("hola");
-            var currentButton = $(e.currentTarget);
-            var currentElement = $('#datum-' + currentButton.data('datumId'));
-            passwordModal.download(currentElement);
-        });
-
-        $('.js-action-link').tooltip();
-
     })();
 });

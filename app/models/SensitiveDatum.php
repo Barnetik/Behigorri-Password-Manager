@@ -82,8 +82,23 @@ class SensitiveDatum extends \Eloquent
     }
 
     public function toJson($options = 0) {
+        $array = $this->_toArray();
+        return json_encode($array, $options);
+    }
+
+    public function toJsonWithSuccess($options = 0) {
+        $array = $this->_toArray();
+        $array['success'] = true;
+        return json_encode($array, $options);
+    }
+
+    public function _toArray()
+    {
         $array = $this->toArray();
         unset($array['file_contents']);
-        return json_encode($array, $options);
+        if ($this->isEncrypted()) {
+            unset($array['value']);
+        }
+        return $array;
     }
 }
