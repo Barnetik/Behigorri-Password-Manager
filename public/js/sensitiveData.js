@@ -75,6 +75,20 @@ $(document).ready(function(){
                 newRow.find('.js-action-link').tooltip();
             };
 
+            this.updateRow = function(data) {
+                var loggedUser = $('#logged-user').text();
+                var currentRow = this.$el.find('#datum-' + data.id);
+                currentRow.find('.js-datum-name').html(data.name);
+                currentRow.find('.js-datum-metadata small').html(data.updated_at + ' (' + loggedUser + ')');
+                if (data.file) {
+                    if (currentRow.find('.js-download').length === 0) {
+                        var downloadLink = this.ui.sampleRow.find('.js-download').clone();
+                        downloadLink.data('datumId', data.id);
+                        currentRow.find('.js-action-links').prepend(downloadLink);
+                    }
+                }
+            };
+
             // Show decrypt modal
             this.$el.on('click', '.js-decrypt', function(e) {
                 var currentButton = $(e.currentTarget);
@@ -167,6 +181,7 @@ $(document).ready(function(){
                     var alert = new alertMessage('success');
                     if (self.ui.idInput.val()) {
                         alert.show('Data updated', self.ui.alertBox, 3000);
+                        sensitiveDataList.updateRow(data);
                     } else  {
                         alert.show('New data created', self.ui.alertBox, 3000);
                         self.ui.idInput.val(data.id);
@@ -180,7 +195,7 @@ $(document).ready(function(){
 
             this.submitError = function(response) {
                 var alert = new alertMessage();
-                alert.show(response.error.message, self.ui.alertBox);
+                alert.show(response.error.message, self.ui.alertBox, 3000);
             };
 
             this.ui.fileField.fineUploader({
