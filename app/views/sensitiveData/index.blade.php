@@ -97,11 +97,11 @@
                                     {{ Form::textarea('value', null, array('class' => 'form-control js-form-value', 'placeholder' => 'Sensitive data', 'rows' => '15'))}}
                                     {{ Form::errorMsg($validator, 'value')}}
                                 </div>
-<!--                                <div class="form-group">
-                                    <a href="#" class="js-file-link"></a>
-                                    {{ Form::file('file')}}
-                                    {{ Form::errorMsg($validator, 'file')}}
-                                </div>-->
+                                <div class="form-group">
+                                    <p>
+                                        <a href="#" class="js-file-link"></a>
+                                    </p>
+                                </div>
                                 <div id="form-fineupload"></div>
                                 <div class="form-group js-add-new-buttons">
                                     <input type="submit" class="btn btn-primary input-medium pull-right js-add-new-send" value="Send" />

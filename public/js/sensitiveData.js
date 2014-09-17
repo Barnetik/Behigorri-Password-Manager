@@ -58,13 +58,45 @@ $(document).ready(function(){
             this.createRow = function(data) {
                 var loggedUser = $('#logged-user').text();
                 var newRow = this.ui.sampleRow.clone();
+
+                if (!data.file) {
+                    newRow.find('.js-download').remove();
+                }
+
                 newRow.attr('id', 'datum-' + data.id);
-                newRow.data('id', data.id);
+                newRow.data('datumId', data.id);
                 newRow.find('.js-datum-name').html(data.name);
                 newRow.find('.js-datum-metadata small').html(data.updated_at + ' (' + loggedUser + ')');
+                newRow.find('.js-download,.js-decrypt,.js-delete').data('datumId', data.id)
                 newRow.removeClass('.js-sample-data-row').removeClass('hide');
+
                 this.$el.prepend(newRow);
+
+                newRow.find('.js-action-link').tooltip();
             };
+
+            // Show decrypt modal
+            this.$el.on('click', '.js-decrypt', function(e) {
+                var currentButton = $(e.currentTarget);
+                var currentElement = $('#datum-' + currentButton.data('datumId'));
+                passwordModal.decrypt(currentElement);
+            });
+
+            // Show delete modal
+            this.$el.on('click', '.js-delete', function(e) {
+                var currentButton = $(e.currentTarget);
+                var currentElement = $('#datum-' + currentButton.data('datumId'));
+                passwordModal.delete(currentElement);
+            });
+
+            // Show download modal
+            this.$el.on('click', '.js-download', function(e) {
+                var currentButton = $(e.currentTarget);
+                var currentElement = $('#datum-' + currentButton.data('datumId'));
+                passwordModal.download(currentElement);
+            });
+
+            $('.js-action-link').tooltip();
         };
 
         var newForm = new function() {
@@ -77,23 +109,17 @@ $(document).ready(function(){
             this.ui = {
                 form: this.$el.find('form'),
                 loading: this.$el.find('.js-add-new-buttons .fa-spinner'),
-                buttons: this.$el.find('button'),
+                buttons: this.$el.find('input:submit,input:reset'),
                 sendButton: this.$el.find('.js-add-new-send'),
                 cancelButton: this.$el.find('.js-add-new-cancel'),
-                fields: this.$el.find('input,textarea'),
+                fields: this.$el.find('input,textarea').not('input:submit,input:reset'),
                 idInput: this.$el.find('.js-form-id'),
                 nameInput: this.$el.find('.js-form-name'),
                 valueInput: this.$el.find('.js-form-value'),
-//                fileInput: this.$el.find('[name=file]'),
                 fileLinks: $(this.$el.parents('.tab-content')[0]).find('.js-file-link'),
                 alertBox: this.$el.find('.js-alert-box'),
                 fileField: $('#form-fineupload')
             };
-
-            this.ui.cancelButton.on('click', function() {
-                self.reset();
-                self.hide();
-            });
 
             this.show = function(tabName) {
                 sensitiveArea.show(tabName);
@@ -105,10 +131,15 @@ $(document).ready(function(){
 
             this.reset = function() {
                 this.ui.fields.val('').change();
-                $('.js-file-link').text('').attr('href', '');
+                this.ui.fileLinks.text('').attr('href', '');
+                var qqFileList = this.$el.find('ul.qq-upload-list');
+                if (qqFileList.length > 0) {
+                    qqFileList.html('');
+                }
             };
 
             this.setData = function(sensitiveDatum) {
+                this.reset();
                 this.ui.idInput.val(sensitiveDatum.id).change();
                 this.ui.nameInput.val(sensitiveDatum.name).change();
                 this.ui.valueInput.val(sensitiveDatum.value).change();
@@ -131,6 +162,43 @@ $(document).ready(function(){
                 return self.ui.fileField.fineUploader('getUploads').length > 0;
             };
 
+            this.submitSuccess = function(data) {
+                if (data.success) {
+                    var alert = new alertMessage('success');
+                    if (self.ui.idInput.val()) {
+                        alert.show('Data updated', self.ui.alertBox, 3000);
+                    } else  {
+                        alert.show('New data created', self.ui.alertBox, 3000);
+                        self.ui.idInput.val(data.id);
+                        sensitiveDataList.createRow(data);
+                    }
+                    if (data.file) {
+                       self.ui.fileLinks.text(data.file);
+                    }
+                }
+            };
+
+            this.submitError = function(response) {
+                var alert = new alertMessage();
+                alert.show(response.error.message, self.ui.alertBox);
+            };
+
+            this.ui.fileField.fineUploader({
+                multiple: false,
+                form: {
+                    interceptSubmit: false
+                }
+            }).on('error', function(event, id, name, errorReason, response){
+                console.log(event, id, name, errorReason, response);
+                self.submitError(response);
+                self.ui.loading.hide();
+                self.ui.buttons.prop('disabled', false);
+            }).on('complete', function(event, id, name, data){
+                self.submitSuccess(data);
+                self.ui.loading.hide();
+                self.ui.buttons.prop('disabled', false);
+            });
+
             this.submit = function() {
                 this.ui.loading.show();
                 this.ui.buttons.prop('disabled', true);
@@ -141,89 +209,26 @@ $(document).ready(function(){
                     $.post(
                         this.ui.form.attr('action'),
                         this.ui.form.serialize(),
-                        function(data) {
-                            var alert = new alertMessage('success');
-                            if (self.ui.idInput.val()) {
-                                alert.show('Data updated', self.ui.alertBox, 3000);
-                            } else  {
-                                alert.show('New data created', self.ui.alertBox, 3000);
-                                self.ui.idInput.val(data.id);
-                                sensitiveDataList.createRow(data);
-                            }
-                        },
+                        self.submitSuccess,
                         'json'
                     ).fail(function(data) {
                         var response = JSON.parse(data.responseText);
-                        var alert = new alertMessage();
-                        alert.show(response.error.message, self.ui.alertBox);
+                        self.submitError(response);
                     }).always(function(){
                         self.ui.loading.hide();
                         self.ui.buttons.prop('disabled', false);
                     });
                 }
             };
-                ////                console.log();
-
-//                if (this.hasFiles) {
-//                    this.$el.fileupload(
-//                        'send',
-//                        {fileInput: self.ui.fileInput}
-//                    ).success(function(data) {
-//                        var alert = new alertMessage('success');
-//                        if (self.ui.idInput.val()) {
-//                            alert.show('Data updated', self.ui.alertBox, 3000);
-//                        } else  {
-//                            alert.show('New data created', self.ui.alertBox, 3000);
-//                            var jsonData = JSON.parse(data);
-//                            self.ui.idInput.val(jsonData.id);
-//                            sensitiveDataList.createRow(jsonData);
-//                        }
-//                        self.ui.loading.hide();
-//                        self.ui.buttons.prop('disabled', false);
-//                    }).fail(function(data) {
-//                        var response = JSON.parse(data.responseText);
-//                        var alert = new alertMessage();
-//                        alert.show(response.error.message, self.ui.alertBox);
-//
-//                        self.ui.loading.hide();
-//                        self.ui.buttons.prop('disabled', false);
-//                    });
-//                } else {
-
-//                }
-//            };
-
-            this.ui.fileField.fineUploader({
-                multiple: false,
-                form: {
-                    interceptSubmit: false
-                }
-            }).on('error', function(event, id, name, errorReason, response){
-                console.log(event, id, name, errorReason, response);
-
-                var alert = new alertMessage();
-                alert.show(response.error.message, self.ui.alertBox);
-
-                self.ui.loading.hide();
-                self.ui.buttons.prop('disabled', false);
-            }).on('complete', function(event, id, name, data){
-                if (data.success) {
-                    var alert = new alertMessage('success');
-                    if (self.ui.idInput.val()) {
-                        alert.show('Data updated', self.ui.alertBox, 3000);
-                    } else  {
-                        alert.show('New data created', self.ui.alertBox, 3000);
-                        self.ui.idInput.val(data.id);
-                        sensitiveDataList.createRow(data);
-                    }
-                }
-                self.ui.loading.hide();
-                self.ui.buttons.prop('disabled', false);
-            });
 
             this.$el.on('submit', function(e) {
                 e.preventDefault();
                 self.submit();
+            });
+
+            this.ui.cancelButton.on('click', function() {
+                self.reset();
+                self.hide();
             });
 
             this.ui.fileLinks.click(function(e) {
@@ -460,28 +465,5 @@ $(document).ready(function(){
                 self.ui.body.html($(this).val());
             });
         };
-
-        // Show decrypt modal
-        $('.js-decrypt').click(function(e) {
-            var currentButton = $(e.currentTarget);
-            var currentElement = $('#datum-' + currentButton.data('datumId'));
-            passwordModal.decrypt(currentElement);
-        });
-
-        // Show decrypt modal
-        $('.js-delete').click(function(e) {
-            var currentButton = $(e.currentTarget);
-            var currentElement = $('#datum-' + currentButton.data('datumId'));
-            passwordModal.delete(currentElement);
-        });
-
-        $('.js-download').click(function(e) {
-            var currentButton = $(e.currentTarget);
-            var currentElement = $('#datum-' + currentButton.data('datumId'));
-            passwordModal.download(currentElement);
-        });
-
-        $('.js-action-link').tooltip();
-
     })();
 });
