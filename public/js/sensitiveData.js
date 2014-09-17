@@ -206,10 +206,12 @@ $(document).ready(function(){
             }).on('error', function(event, id, name, errorReason, response){
                 console.log(event, id, name, errorReason, response);
                 self.submitError(response);
+                self.ui.fileField.fineUploader('reset');
                 self.ui.loading.hide();
                 self.ui.buttons.prop('disabled', false);
             }).on('complete', function(event, id, name, data){
                 self.submitSuccess(data);
+                self.ui.fileField.fineUploader('reset');
                 self.ui.loading.hide();
                 self.ui.buttons.prop('disabled', false);
             });
