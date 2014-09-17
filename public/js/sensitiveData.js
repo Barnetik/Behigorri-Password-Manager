@@ -202,6 +202,9 @@ $(document).ready(function(){
                 multiple: false,
                 form: {
                     interceptSubmit: false
+                },
+                validation: {
+                    sizeLimit: 15000000
                 }
             }).on('error', function(event, id, name, errorReason, response){
                 console.log(event, id, name, errorReason, response);
