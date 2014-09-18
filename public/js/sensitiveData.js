@@ -378,9 +378,11 @@ $(document).ready(function(){
                     },
                     'json'
                 ).fail(function(data) {
-                    var response = JSON.parse(data.responseText);
-                    var alert = new alertMessage();
-                    alert.show(response.error.message, self.ui.modalBody);
+                    try {
+                        var response = JSON.parse(data.responseText);
+                        var alert = new alertMessage();
+                        alert.show(response.error.message, self.ui.modalBody);
+                    } catch(err) {}
                 });
             };
 
@@ -392,9 +394,11 @@ $(document).ready(function(){
                     self.hide();
                     $('#datum-' + self.ui.idField.val()).remove();
                 }).fail(function(data) {
-                    var response = JSON.parse(data.responseText);
-                    var alert = new alertMessage();
-                    alert.show(response.error.message, self.ui.modalBody);
+                    try {
+                        var response = JSON.parse(data.responseText);
+                        var alert = new alertMessage();
+                        alert.show(response.error.message, self.ui.modalBody);
+                    } catch(err) {}
                 });
             };
 
@@ -420,9 +424,11 @@ $(document).ready(function(){
                     theForm.remove();
                     self.hide();
                 }).fail(function(data) {
-                    var response = JSON.parse(data.responseText);
-                    var alert = new alertMessage();
-                    alert.show(response.error.message, self.ui.modalBody);
+                    try {
+                        var response = JSON.parse(data.responseText);
+                        var alert = new alertMessage();
+                        alert.show(response.error.message, self.ui.modalBody);
+                    } catch(err) {}
                 });
             };
         };
