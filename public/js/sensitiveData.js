@@ -1,4 +1,9 @@
 $(document).ready(function(){
+    $(document).ajaxError(function(event, jqxhr, settings, thrownError) {
+        if (jqxhr.status === 401) {
+            window.location = $('base').attr('href') + '/login';
+        }
+    });
     var sensitiveData = (function() {
         var baseUrl = $('base').attr('href');
 
@@ -232,8 +237,10 @@ $(document).ready(function(){
                         self.submitSuccess,
                         'json'
                     ).fail(function(data) {
-                        var response = JSON.parse(data.responseText);
-                        self.submitError(response);
+                        try {
+                            var response = JSON.parse(data.responseText);
+                            self.submitError(response);
+                        } catch (err) {}
                     }).always(function(){
                         self.ui.loading.hide();
                         self.ui.buttons.prop('disabled', false);
