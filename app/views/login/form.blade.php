@@ -8,7 +8,7 @@
                 <form accept-charset="UTF-8" role="form" method="post">
                     <fieldset>
                         <div class="form-group">
-                            <input class="form-control" placeholder="Username" name="username" type="text">
+                            <input class="form-control" placeholder="Username" name="username" type="text" autofocus="true">
                         </div>
 
                         <div class="form-group">
