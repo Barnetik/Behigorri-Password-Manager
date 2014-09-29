@@ -134,6 +134,7 @@ $(document).ready(function(){
                 fields: this.$el.find('input,textarea').not('input:submit,input:reset'),
                 idInput: this.$el.find('.js-form-id'),
                 nameInput: this.$el.find('.js-form-name'),
+                tagsField: this.$el.find('#tags'),
                 valueInput: this.$el.find('.js-form-value'),
                 fileLinks: $(this.$el.parents('.tab-content')[0]).find('.js-file-link'),
                 alertBox: this.$el.find('.js-alert-box'),
@@ -150,6 +151,7 @@ $(document).ready(function(){
 
             this.reset = function() {
                 this.ui.fields.val('').change();
+                this.ui.tagsField.tagsinput('removeAll');
                 this.ui.fileLinks.text('').attr('href', '');
                 var qqFileList = this.$el.find('ul.qq-upload-list');
                 if (qqFileList.length > 0) {
@@ -163,6 +165,9 @@ $(document).ready(function(){
                 this.ui.nameInput.val(sensitiveDatum.name).change();
                 this.ui.valueInput.val(sensitiveDatum.value).change();
                 this.ui.fileLinks.text(sensitiveDatum.file);
+                for (var tag in sensitiveDatum.tags) {
+                    this.ui.tagsField.tagsinput('add', sensitiveDatum.tags[tag].name);
+                }
             };
 
             this.ui.loading.hide = function() {
@@ -251,6 +256,30 @@ $(document).ready(function(){
             this.$el.on('submit', function(e) {
                 e.preventDefault();
                 self.submit();
+            });
+
+            var tags = new Bloodhound({
+              datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+              queryTokenizer: Bloodhound.tokenizers.whitespace,
+              prefetch: {
+                url: baseUrl + '/tags',
+                filter: function(list) {
+                    return $.map(list, function(tag) {
+                        return tag;
+                    });
+                }
+              }
+            });
+            tags.initialize();
+
+            this.ui.tagsField.tagsinput({
+              trimValue: true,
+              typeaheadjs: {
+                name: 'tags',
+                displayKey: 'name',
+                valueKey: 'name',
+                source: tags.ttAdapter()
+              }
             });
 
             this.ui.cancelButton.on('click', function() {

@@ -81,15 +81,20 @@ class SensitiveDatum extends \Eloquent
         return $this->belongsTo('User');
     }
 
+    public function tags()
+    {
+        return $this->belongsToMany('Tag')->withTimestamps();
+    }
+
     public function toJson($options = 0) {
         $array = $this->_toArray();
         return json_encode($array, $options);
     }
 
-    public function toJsonWithSuccess($options = 0) {
+    public function toArrayWithSuccess($options = 0) {
         $array = $this->_toArray();
         $array['success'] = true;
-        return json_encode($array, $options);
+        return $array;
     }
 
     public function _toArray()
