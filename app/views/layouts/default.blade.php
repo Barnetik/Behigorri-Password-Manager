@@ -4,6 +4,7 @@
     <link rel="stylesheet" type="text/css" href="{{ asset('bower_components/bootstrap-tagsinput/dist/bootstrap-tagsinput.css') }}" />
     <link rel="stylesheet" type="text/css" href="{{ asset('bower_components/fineuploader-dist/dist/fineuploader.css') }}" />
     <link rel="stylesheet" type="text/css" href="{{ asset('bower_components/fontawesome/css/font-awesome.min.css') }}" />
+    <link rel="stylesheet" type="text/css" href="{{ asset('bower_components/typeahead.js-bootstrap.css/typeahead.js-bootstrap.css') }}" />
     <link rel="stylesheet" type="text/css" href="{{ asset('css/behigorri.css') }}" />
     <script type="text/javascript" src="{{ asset('bower_components/jquery/dist/jquery.min.js') }}"></script>
     <script type="text/javascript" src="{{ asset('bower_components/fineuploader-dist/dist/jquery.fineuploader.js') }}"></script>
