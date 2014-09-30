@@ -98,6 +98,16 @@
                                     {{ Form::errorMsg($validator, 'value')}}
                                 </div>
                                 <div class="form-group">
+                                    {{ Form::label('tags', 'Tags:') }}
+                                    {{ Form::select('tags[]', array(), null,
+                                            array(
+                                                'multiple' => 'true',
+                                                'id' => 'tags'
+                                            )
+                                    )}}
+                                    {{ Form::errorMsg($validator, 'tags')}}
+                                </div>
+                                <div class="form-group">
                                     <p>
                                         <a href="#" class="js-file-link"></a>
                                     </p>

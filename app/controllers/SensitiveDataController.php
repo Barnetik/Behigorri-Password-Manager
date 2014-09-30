@@ -82,6 +82,8 @@ class SensitiveDataController extends \BaseController {
                 }
 
                 $datum->save();
+
+                $this->saveTags(Input::get('tags'), $datum);
             }
 
             if (Request::ajax()) {
@@ -89,12 +91,39 @@ class SensitiveDataController extends \BaseController {
                     return $this->_ajaxError($validator->messages()->all(), 400);
                 }
 
-                return $datum->toJsonWithSuccess();
+                return $datum->toArrayWithSuccess();
 
             } else {
                 $this->index($validator);
             }
 	}
+
+        protected function saveTags($tags, SensitiveDatum $datum)
+        {
+            $currentTags = array();
+            foreach ($tags as $tagname) {
+                $currentTags[] = $this->getTag($tagname)->id;
+            }
+
+            $datum->tags()->sync($currentTags);
+        }
+
+        protected function getTag($name)
+        {
+            $cleanName = strtolower(trim($name));
+            $tag = Tag::where('name', '=', $cleanName)->first();
+
+            if ($tag) {
+                return $tag;
+            }
+
+            $tag = App::make('Tag');
+            $tag->name = $cleanName;
+            $tag->slug = Str::slug($tag->name);
+            $tag->save();
+            return $tag;
+
+        }
 
         public function download()
         {
@@ -121,7 +150,7 @@ class SensitiveDataController extends \BaseController {
 
         public function decrypt()
         {
-            $datum = SensitiveDatum::find(Input::get('id'));
+            $datum = SensitiveDatum::with('tags')->find(Input::get('id'));
 
             if (!$datum) {
                 throw new \Exception('Data not found');
@@ -131,7 +160,7 @@ class SensitiveDataController extends \BaseController {
             $datum->setRole($role);
             try {
                 $datum->decrypt(Input::get('password'));
-                return $datum->toJson();
+                return $datum;
             } catch (\Exception $e) {
                 return $this->_ajaxError($e->getMessage(), 500);
             }

@@ -24,7 +24,8 @@ Route::group(array('before' => 'auth'), function()
     Route::resource('sensitiveData', 'SensitiveDataController');
 
     Route::get('/logout', 'LogoutController@logout');
-
+    Route::get('/tags', 'TagsController@index');
+    Route::get('/tags/search', 'TagsController@search');
 });
 
 
