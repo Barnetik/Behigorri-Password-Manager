@@ -91,7 +91,7 @@ class SensitiveDataController extends \BaseController {
                     return $this->_ajaxError($validator->messages()->all(), 400);
                 }
 
-                return Response::json($datum->toArrayWithSuccess());
+                return $datum->toArrayWithSuccess();
 
             } else {
                 $this->index($validator);
