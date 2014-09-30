@@ -25,7 +25,7 @@ Route::group(array('before' => 'auth'), function()
 
     Route::get('/logout', 'LogoutController@logout');
     Route::get('/tags', 'TagsController@index');
-
+    Route::get('/tags/search', 'TagsController@search');
 });
 
 

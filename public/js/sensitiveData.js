@@ -1,3 +1,4 @@
+
 $(document).ready(function(){
     $(document).ajaxError(function(event, jqxhr, settings, thrownError) {
         if (jqxhr.status === 401) {
@@ -259,31 +260,26 @@ $(document).ready(function(){
             });
 
             var tags = new Bloodhound({
-              datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
-              queryTokenizer: Bloodhound.tokenizers.whitespace,
-              prefetch: {
-                url: baseUrl + '/tags',
-                filter: function(list) {
-                    return $.map(list, function(tag) {
-                        return tag;
-                    });
-                }
-              }
+                datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
+                queryTokenizer: Bloodhound.tokenizers.whitespace,
+  //              prefetch: baseUrl + '/tags',
+                remote: baseUrl + '/tags/search?query=%QUERY'
             });
             tags.initialize();
 
             this.ui.tagsField.tagsinput({
-              trimValue: true,
-              typeaheadjs: {
-                name: 'tags',
-                displayKey: 'name',
-                valueKey: 'name',
-                source: tags.ttAdapter()
-              }
+                trimValue: true,
+                typeaheadjs: {
+                    name: 'tags',
+                    displayKey: 'name',
+                    valueKey: 'name',
+                    source: tags.ttAdapter()
+                }
             });
 
             /*
-             * Clean tagsinput value as soon as an item is added to avoid this bug
+             * Clean tagsinput value as soon as an item is added to avoid bug
+             * when focusing out of the input box
              * Bug: https://github.com/TimSchlechter/bootstrap-tagsinput/issues/200
              */
             this.ui.tagsField.on('itemAdded', function(event) {
