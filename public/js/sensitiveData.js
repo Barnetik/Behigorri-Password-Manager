@@ -282,6 +282,14 @@ $(document).ready(function(){
               }
             });
 
+            /*
+             * Clean tagsinput value as soon as an item is added to avoid this bug
+             * Bug: https://github.com/TimSchlechter/bootstrap-tagsinput/issues/200
+             */
+            this.ui.tagsField.on('itemAdded', function(event) {
+                self.ui.tagsField.tagsinput('input').typeahead('val', '');
+            });
+
             this.ui.cancelButton.on('click', function() {
                 self.reset();
                 self.hide();
