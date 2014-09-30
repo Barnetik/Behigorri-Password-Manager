@@ -21,6 +21,7 @@
     "markdown": "~0.5.0",
     "fineuploader-dist": "~5.0.3",
     "typeahead.js": "~0.10.5",
-    "typeahead.js-bootstrap.css": "*"
+    "typeahead.js-bootstrap.css": "*",
+    "bootstrap-tagsinput": "~0.4.2"
   }
 }
