@@ -1,71 +1,15 @@
-
 <div class="row">
-    <div class="col-xs-7">
 
-        <table class="table table-striped table-hover js-sensitive-data-list">
-            <thead>
-                <tr>
-                    <th class="col-xs-5">Description</th>
-                    <th class="col-xs-4 text-right">Last update</th>
-                    <th class="col-xs-3"></th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr data-datum-id=":id" class="hide js-sample-data-row">
-                    <td class="col-xs-5 js-datum-name">
-                        :name
-                    </td>
-                    <td class="col-xs-4 text-right js-datum-metadata">
-                        <small>:updated-at (:username)</small>
-                    </td>
-                    <td class="col-xs-3 text-right js-action-links">
-                        <span title="download attatched file" data-toggle="tooltip" class="js-download fa-stack fa-lg js-action-link" data-datum-id=":id">
-                            <i class="fa fa-circle-o fa-stack-2x"></i>
-                            <i class="fa fa-download fa-stack-1x"></i>
-                        </span>
-                        <span title="decrypt" class="js-decrypt fa-stack fa-lg js-action-link" data-datum-id=":id">
-                            <i class="fa fa-circle-o fa-stack-2x"></i>
-                            <i class="fa fa-unlock-alt fa-stack-1x"></i>
-                        </span>
-                        <span title="delete" class="js-delete fa-stack fa-lg js-action-link" data-datum-id=":id">
-                            <i class="fa fa-circle-o fa-stack-2x"></i>
-                            <i class="fa fa-times fa-stack-1x"></i>
-                        </span>
-                    </td>
-                </tr>
-                @foreach ($sensitiveData as $datum)
-                <tr id="datum-{{{ $datum->id }}}" data-datum-id="{{{ $datum->id }}}">
-                    <td class="col-xs-5 js-datum-name">
-                        {{{ $datum->name }}}
-                    </td>
-                    <td class="col-xs-4 text-right">
-                        <small>{{{ $datum->updated_at }}} ({{{ $datum->user->username }}})</small>
-                    </td>
-                    <td class="col-xs-3 text-right js-action-links">
-                        @if ($datum->file)
-                            <span title="download attatched file" data-toggle="tooltip" class="js-download fa-stack fa-lg js-action-link" data-datum-id="{{{ $datum->id }}}">
-                                <i class="fa fa-circle-o fa-stack-2x"></i>
-                                <i class="fa fa-download fa-stack-1x"></i>
-                            </span>
-                        @endif
-                        <span title="decrypt" class="js-decrypt fa-stack fa-lg js-action-link" data-datum-id="{{{ $datum->id }}}">
-                            <i class="fa fa-circle-o fa-stack-2x"></i>
-                            <i class="fa fa-unlock-alt fa-stack-1x"></i>
-                        </span>
-                        <span title="delete" class="js-delete fa-stack fa-lg js-action-link" data-datum-id="{{{ $datum->id }}}">
-                            <i class="fa fa-circle-o fa-stack-2x"></i>
-                            <i class="fa fa-times fa-stack-1x"></i>
-                        </span>
-                    </td>
-                </tr>
-                @endforeach
-            </tbody>
-        </table>
+    <div id="tag-list" class="col-xs-1">
+        @include('sensitiveData/angular/tags')
+    </div>
 
+    <div class="col-xs-6">
+        @include('sensitiveData/angular/sensitive-data')
     </div>
 
     <div class="col-xs-5">
-        <div class="row">
+        <div class="col-xs-12">
             <button class="btn btn-success input-medium pull-right js-add-new">Add New</button>
         </div>
 

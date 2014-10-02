@@ -15,17 +15,20 @@ class SensitiveDataController extends \BaseController {
             $term = '';
             if (Input::has('query') && trim(Input::get('query'))) {
                 $term = trim(Input::get('query'));
-                $sensitiveData = SensitiveDatum::where("name", "like", "%" . $term . "%")->get();
+                $sensitiveData = SensitiveDatum::with('User', 'Tags')->where("name", "like", "%" . $term . "%")->get();
             } else {
-                $sensitiveData = SensitiveDatum::all();
+                $sensitiveData = SensitiveDatum::with('User', 'Tags')->get();
             }
+
+            $tags = Tag::with('SensitiveData')->get();
 
             $this->layout->query = $term;
 
             $this->layout->content = View::make('sensitiveData.index')
                 ->with([
                     'sensitiveData' => $sensitiveData,
-                    'validator' => $validator
+                    'validator' => $validator,
+                    'tags' => $tags
                 ]);
 
             $this->layout->with('scripts', ['js/sensitiveData.js']);

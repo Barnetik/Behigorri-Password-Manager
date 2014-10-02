@@ -18,3 +18,7 @@
 .js-alert-box .alert {
     margin-bottom: 0;
 }
+
+#tag-list ul li {
+    margin-top: 5px;
+}

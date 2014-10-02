@@ -1,4 +1,54 @@
+(function() {
+    var app = angular.module('Behigorri', []);
+    app.controller('TagsController', function($scope) {
+        this.tags = tags;
 
+        this.hasSensitiveData = function(tag) {
+            return tag.sensitive_data.length > 0
+        };
+
+        this.filterSensitiveData = function(tag) {
+            $scope.$root.$broadcast('filterByTag', tag);
+        };
+    });
+
+    app.controller('SensitiveDataController', ['$scope', '$filter', function($scope, $filter) {
+        var self = this;
+        this.data = sensitiveData;
+        this.origData = sensitiveData;
+
+        this.filterTags = [];
+
+        $scope.$on('filterByTag', function(event, tag) {
+            var tagIndex = self.filterTags.indexOf(tag);
+
+            if (tagIndex >= 0) {
+                self.filterTags.splice(tagIndex, 1);
+                tag.labelClass = 'label-default';
+            } else {
+                self.filterTags.push(tag);
+                tag.labelClass = 'label-primary';
+            }
+
+            if (self.filterTags.length === 0) {
+                self.data = self.origData;
+            } else {
+                self.data = $filter('filter')(self.origData, function(value) {
+                    var found = false;
+                    angular.forEach(self.filterTags, function(filterTag) {
+                        angular.forEach(value.tags, function(valueTag) {
+                            if (valueTag.id === filterTag.id) {
+                                found = true;
+                            }
+                        });
+                    });
+                    return found;
+                });
+            }
+        });
+    }]);
+
+})();
 $(document).ready(function(){
     $(document).ajaxError(function(event, jqxhr, settings, thrownError) {
         if (jqxhr.status === 401) {
