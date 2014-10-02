@@ -4,6 +4,7 @@ use Service\Gnupg;
 class SensitiveDatum extends \Eloquent
 {
     public $fillable = ['name', 'value'];
+    public $hidden = ['value', 'file_contents'];
     public $encrypted = false;
 
     protected $gnupg;
@@ -39,6 +40,17 @@ class SensitiveDatum extends \Eloquent
         }
         $this->encrypted = true;
         $this->gnupg->clearEncryptKeys();
+        $this->hideEncryptedValues();
+    }
+
+    protected function hideEncryptedValues()
+    {
+        if (!in_array('value', $this->hidden)) {
+            array_push($this->hidden, 'value');
+        }
+        if (!in_array('file_contents', $this->hidden)) {
+            array_push($this->hidden, 'file_contents');
+        }
     }
 
     public function decrypt($password)
@@ -49,7 +61,17 @@ class SensitiveDatum extends \Eloquent
         if ($this->file_contents) {
             $this->file_contents = $this->gnupg->decrypt($this->file_contents, $password);
         }
+
         $this->encrypted = false;
+        $this->showDecryptedValues();
+    }
+
+    protected function showDecryptedValues()
+    {
+        $valuePosition = array_search('value', $this->hidden);
+        if ($valuePosition !== false) {
+            unset($this->hidden[$valuePosition]);
+        }
     }
 
     public function setEncryptedValue($value)
@@ -86,24 +108,9 @@ class SensitiveDatum extends \Eloquent
         return $this->belongsToMany('Tag')->withTimestamps();
     }
 
-    public function toJson($options = 0) {
-        $array = $this->_toArray();
-        return json_encode($array, $options);
-    }
-
     public function toArrayWithSuccess($options = 0) {
-        $array = $this->_toArray();
-        $array['success'] = true;
-        return $array;
-    }
-
-    public function _toArray()
-    {
         $array = $this->toArray();
-        unset($array['file_contents']);
-        if ($this->isEncrypted()) {
-            unset($array['value']);
-        }
+        $array['success'] = true;
         return $array;
     }
 }
