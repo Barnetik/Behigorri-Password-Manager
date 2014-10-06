@@ -1,6 +1,41 @@
 (function() {
-    var app = angular.module('Behigorri', []);
-    app.controller('TagsController', function($scope) {
+    var app = angular.module('Behigorri', ['ngTagsInput']);
+
+    app.factory('TagFilterService', function($rootScope) {
+        var service = {};
+        service.filterByTag = function(tag) {
+            $rootScope.$broadcast('filterByTag', tag);
+        };
+        return service;
+    });
+
+    app.factory('PasswordModalService', function($rootScope) {
+        var service = {};
+        service.decryptData = function(sensitiveData) {
+            $rootScope.$broadcast('decryptData', sensitiveData)
+        };
+        service.deleteData = function(sensitiveData) {
+            $rootScope.$broadcast('deleteData', sensitiveData)
+        };
+        service.downloadFile = function(sensitiveData) {
+            $rootScope.$broadcast('downloadFile', sensitiveData)
+        };
+
+        service.dataDecrypted = function(sensitiveData) {
+            $rootScope.$broadcast('dataDecrypted', sensitiveData);
+        };
+        return service;
+    });
+
+    app.factory('SensitiveDataService', function($rootScope) {
+        var service = {};
+        service.updateListData = function(sensitiveData) {
+            $rootScope.$broadcast('updateListData', sensitiveData);
+        };
+        return service;
+    });
+
+    app.controller('TagsController', ['$scope', 'TagFilterService', function($scope, TagFilterService) {
         this.tags = tags;
 
         this.hasSensitiveData = function(tag) {
@@ -8,16 +43,41 @@
         };
 
         this.filterSensitiveData = function(tag) {
-            $scope.$root.$broadcast('filterByTag', tag);
+            TagFilterService.filterByTag(tag);
         };
-    });
+    }]);
 
-    app.controller('SensitiveDataController', ['$scope', '$filter', function($scope, $filter) {
+    app.controller('SensitiveDataListController', ['$scope', '$filter', 'PasswordModalService', function($scope, $filter, PasswordModalService) {
         var self = this;
         this.data = sensitiveData;
         this.origData = sensitiveData;
 
         this.filterTags = [];
+
+        this.decryptData = function(sensitiveData) {
+            PasswordModalService.decryptData(sensitiveData);
+        };
+
+        this.deleteData = function(sensitiveData) {
+            PasswordModalService.deleteData(sensitiveData);
+        };
+
+        this.downloadFile = function(sensitiveData) {
+            PasswordModalService.downloadFile(sensitiveData);
+        };
+
+        $scope.$on('updateListData', function(event, sensitiveData) {
+            var found = false;
+            angular.forEach(self.origData, function(data, key) {
+                if (data.id === sensitiveData.id) {
+                    self.data[key] = sensitiveData;
+                    found = true;
+                }
+            });
+            if (!found) {
+                self.origData.push(sensitiveData);
+            }
+        });
 
         $scope.$on('filterByTag', function(event, tag) {
             var tagIndex = self.filterTags.indexOf(tag);
@@ -48,7 +108,161 @@
         });
     }]);
 
+    app.controller('SensitiveDataAreaController', ['$http', '$scope', 'SensitiveDataService', function($http, $scope, sensitiveDataService) {
+        var self = this;
+
+        this.baseUrl = angular.element('base').attr('href');
+        this.selectedTab = 'form';
+        $scope.show = false;
+        $scope.sensitiveData = {};
+
+        $scope.alertMessage = '';
+
+        $scope.showArea = function() {
+            $scope.show = true;
+        };
+
+        $scope.hideArea = function() {
+            $scope.show = false;
+            $scope.sensitiveData = {};
+        };
+
+        this.isSelectedTab = function(tabName) {
+            return this.selectedTab === tabName;
+        };
+
+        this.selectTab = function(tabName) {
+            this.selectedTab = tabName;
+        };
+
+        $scope.getAvailableTags = function(query) {
+            return $http.get(self.baseUrl + '/tags/search?query=' + query);
+        };
+
+        this.submitData = function($event) {
+            $event.preventDefault();
+            $scope.alertMessage = '';
+
+            $http.post(
+                self.baseUrl + '/sensitiveData',
+                $scope.sensitiveData
+            ).success(function(data) {
+                var value = $scope.sensitiveData.value;
+                $scope.sensitiveData = data;
+                $scope.sensitiveData.value = value;
+                sensitiveDataService.updateListData(angular.copy($scope.sensitiveData));
+            }).error(function(data) {
+                $scope.alertMessage = data.error.message;
+            });
+        };
+
+        $scope.$on('dataDecrypted', function(event, sensitiveData){
+            $scope.showArea();
+            $scope.sensitiveData = sensitiveData;
+        });
+    }]);
+
+    app.controller('PasswordModalController', ['$scope', '$element', '$http', 'PasswordModalService', function($scope, $element, $http, passwordModalService) {
+        var self = this;
+        this.$el = $($element);
+        this.action = '';
+        this.titleClass = 'text-info';
+        this.submitClass = 'btn-info';
+        this.submitText = 'Decrypt Now';
+        this.submitDisabled = true;
+        this.password = '';
+        this.sensitiveData = {};
+
+        this.baseUrl = angular.element('base').attr('href');
+        $scope.alertMessage = '';
+        $scope.alertClass = 'alert-warning';
+
+        this.checkSubmitable = function(value) {
+            if (self.password.length > 0) {
+                self.submitDisabled = false;
+            } else {
+                self.submitDisabled = true;
+            }
+        };
+
+        this.show = function() {
+            self.$el.modal('show');
+            self.$el.on('shown.bs.modal', function() {
+                self.$el.find('input.js-password').focus();
+            });
+        };
+
+        this.hide = function() {
+            this.$el.modal('hide');
+        };
+
+        this.performAction = function() {
+            switch (self.action) {
+                case 'decrypt':
+                    self.decrypt();
+                    break;
+                case 'delete':
+                    self.delete();
+                    break;
+                case 'download':
+                    self.download();
+                    break;
+            }
+        };
+
+        this.decrypt = function() {
+            $http.post(
+                    self.baseUrl + '/sensitiveData/decrypt',
+                    {
+                        id: self.sensitiveData.id,
+                        password: self.password
+                    }
+                ).
+                success(function(data) {
+                    passwordModalService.dataDecrypted(data);
+                    self.hide();
+                }).
+                error(function(response){
+                    $scope.alertMessage = response.error.message;
+                    $scope.alertClass = 'alert-warning';
+                });
+        };
+
+        $scope.$on('decryptData', function(event, sensitiveData) {
+            self.action = 'decrypt';
+            self.titleClass = 'text-info';
+            self.submitText = 'Decrypt Now';
+            self.submitClass = 'btn-info';
+            self.submitDisabled = true;
+            self.password = '';
+            self.sensitiveData = sensitiveData;
+            self.show();
+        });
+
+        $scope.$on('deleteData', function(event, sensitiveData) {
+            self.action = 'delete';
+            self.titleClass = 'text-danger';
+            self.submitText = 'Delete Now';
+            self.submitClass = 'btn-danger';
+            self.submitDisabled = true;
+            self.password = '';
+            self.sensitiveData = sensitiveData;
+            self.show();
+        });
+
+        $scope.$on('downloadFile', function(event, sensitiveData) {
+            self.action = 'download';
+            self.titleClass = 'text-info';
+            self.submitText = 'Download Now';
+            self.submitClass = 'btn-info';
+            self.submitDisabled = true;
+            self.password = '';
+            self.sensitiveData = sensitiveData;
+            self.show();
+        });
+    }]);
 })();
+
 $(document).ready(function(){
     $(document).ajaxError(function(event, jqxhr, settings, thrownError) {
         if (jqxhr.status === 401) {
@@ -64,7 +278,6 @@ $(document).ready(function(){
             this.$el = $('.js-sensitive-data-tabs');
 
             this.ui = {
-                addNewButton: $('.js-add-new'),
                 closeButton: this.$el.find('.js-close-sensitive-data')
             };
 
@@ -78,27 +291,6 @@ $(document).ready(function(){
                 return this.$el.find('.has-error').length > 0;
             };
 
-            this.show = function(tabName) {
-                var tabName = tabName || 'edit';
-                $('#' + tabName + '-sensitive-data-tab').tab('show');
-                this.ui.addNewButton.addClass('hidden');
-                this.$el.removeClass('hidden');
-            };
-
-            this.hide = function() {
-                this.ui.addNewButton.removeClass('hidden');
-                this.$el.addClass('hidden');
-            };
-
-            this.ui.addNewButton.on('click', function() {
-                self.show();
-            });
-
-            this.ui.closeButton.on('click', function(){
-                newForm.reset();
-                self.hide();
-            });
-
             this.init();
         };
 
@@ -106,30 +298,6 @@ $(document).ready(function(){
             var self = this;
 
             this.$el = $('.js-sensitive-data-list');
-
-            this.ui = {
-                sampleRow: this.$el.find('.js-sample-data-row')
-            };
-
-            this.createRow = function(data) {
-                var loggedUser = $('#logged-user').text();
-                var newRow = this.ui.sampleRow.clone();
-
-                if (!data.file) {
-                    newRow.find('.js-download').remove();
-                }
-
-                newRow.attr('id', 'datum-' + data.id);
-                newRow.data('datumId', data.id);
-                newRow.find('.js-datum-name').html(data.name);
-                newRow.find('.js-datum-metadata small').html(data.updated_at + ' (' + loggedUser + ')');
-                newRow.find('.js-download,.js-decrypt,.js-delete').data('datumId', data.id)
-                newRow.removeClass('.js-sample-data-row').removeClass('hide');
-
-                this.$el.prepend(newRow);
-
-                newRow.find('.js-action-link').tooltip();
-            };
 
             this.updateRow = function(data) {
                 var loggedUser = $('#logged-user').text();
@@ -144,27 +312,6 @@ $(document).ready(function(){
                     }
                 }
             };
-
-            // Show decrypt modal
-            this.$el.on('click', '.js-decrypt', function(e) {
-                var currentButton = $(e.currentTarget);
-                var currentElement = $('#datum-' + currentButton.data('datumId'));
-                passwordModal.decrypt(currentElement);
-            });
-
-            // Show delete modal
-            this.$el.on('click', '.js-delete', function(e) {
-                var currentButton = $(e.currentTarget);
-                var currentElement = $('#datum-' + currentButton.data('datumId'));
-                passwordModal.delete(currentElement);
-            });
-
-            // Show download modal
-            this.$el.on('click', '.js-download', function(e) {
-                var currentButton = $(e.currentTarget);
-                var currentElement = $('#datum-' + currentButton.data('datumId'));
-                passwordModal.download(currentElement);
-            });
 
             $('.js-action-link').tooltip();
         };
@@ -207,17 +354,6 @@ $(document).ready(function(){
                 var qqFileList = this.$el.find('ul.qq-upload-list');
                 if (qqFileList.length > 0) {
                     qqFileList.html('');
-                }
-            };
-
-            this.setData = function(sensitiveDatum) {
-                this.reset();
-                this.ui.idInput.val(sensitiveDatum.id).change();
-                this.ui.nameInput.val(sensitiveDatum.name).change();
-                this.ui.valueInput.val(sensitiveDatum.value).change();
-                this.ui.fileLinks.text(sensitiveDatum.file);
-                for (var tag in sensitiveDatum.tags) {
-                    this.ui.tagsField.tagsinput('add', sensitiveDatum.tags[tag].name);
                 }
             };
 
@@ -280,67 +416,6 @@ $(document).ready(function(){
                 self.ui.buttons.prop('disabled', false);
             });
 
-            this.submit = function() {
-                this.ui.loading.show();
-                this.ui.buttons.prop('disabled', true);
-
-                if (self.hasFiles()) {
-                    this.ui.fileField.fineUploader('uploadStoredFiles');
-                } else {
-                    $.post(
-                        this.ui.form.attr('action'),
-                        this.ui.form.serialize(),
-                        self.submitSuccess,
-                        'json'
-                    ).fail(function(data) {
-                        try {
-                            var response = JSON.parse(data.responseText);
-                            self.submitError(response);
-                        } catch (err) {}
-                    }).always(function(){
-                        self.ui.loading.hide();
-                        self.ui.buttons.prop('disabled', false);
-                    });
-                }
-            };
-
-            this.$el.on('submit', function(e) {
-                e.preventDefault();
-                self.submit();
-            });
-
-            var tags = new Bloodhound({
-                datumTokenizer: Bloodhound.tokenizers.obj.whitespace('name'),
-                queryTokenizer: Bloodhound.tokenizers.whitespace,
-  //              prefetch: baseUrl + '/tags',
-                remote: baseUrl + '/tags/search?query=%QUERY'
-            });
-            tags.initialize();
-
-            this.ui.tagsField.tagsinput({
-                trimValue: true,
-                typeaheadjs: {
-                    name: 'tags',
-                    displayKey: 'name',
-                    valueKey: 'name',
-                    source: tags.ttAdapter()
-                }
-            });
-
-            /*
-             * Clean tagsinput value as soon as an item is added to avoid bug
-             * when focusing out of the input box
-             * Bug: https://github.com/TimSchlechter/bootstrap-tagsinput/issues/200
-             */
-            this.ui.tagsField.on('itemAdded', function(event) {
-                self.ui.tagsField.tagsinput('input').typeahead('val', '');
-            });
-
-            this.ui.cancelButton.on('click', function() {
-                self.reset();
-                self.hide();
-            });
-
             this.ui.fileLinks.click(function(e) {
                 e.preventDefault();
                 var currentElement = $('#datum-' + self.ui.idInput.val());
@@ -365,68 +440,8 @@ $(document).ready(function(){
                 form: this.$el.find('form')
             };
 
-            this.decrypt = function(currentElement) {
-                this.action = 'decrypt';
-                this.show(currentElement);
-            };
-
-            this.delete = function(currentElement) {
-                this.action = 'delete';
-                this.show(currentElement);
-            };
-
-            this.download = function(currentElement) {
-                this.action = 'download';
-                this.show(currentElement);
-            };
-
-            this.show = function(datumElement) {
-                var textClass = 'info';
-                var submitText = 'Decrypt Now';
-
-                if (this.action === 'delete') {
-                    textClass = 'danger';
-                    submitText = 'Delete Now';
-                }
-
-                if (this.$el.find('.alert')) {
-                    this.$el.find('.alert').alert('close');
-                }
-
-                if (this.action === 'download') {
-                    submitText = 'Download Now';
-                }
-
-                this.ui.submitButton.prop('disabled', true);
-                this.ui.modalTitle.html('<strong class="text-' + textClass + '">' + this.action + '</strong>' + datumElement.find('.js-datum-name').text());
-                this.ui.idField.val(datumElement.data('datumId'));
-                this.ui.passwordField.val('');
-                this.ui.submitButton.attr('class', 'btn btn-' + textClass + ' js-submit');
-                this.ui.submitButton.text(submitText);
-                this.$el.modal('show');
-                this.$el.on('shown.bs.modal', function() {
-                    self.ui.passwordField.focus();
-                });
-            };
-
-            this.hide = function() {
-                this.$el.modal('hide');
-            };
-
-            this.ui.passwordField.on('change, keyup', function(e) {
-                if ($(this).val() !== '') {
-                   self.ui.submitButton.prop('disabled', false);
-                } else {
-                   self.ui.submitButton.prop('disabled', true);
-                }
-            });
-
             this.submit = function() {
                 if (self.ui.passwordField.val() !== '') {
-                    if (self.$el.find('.alert')) {
-                        self.$el.find('.alert').alert('close');
-                    }
-
                     switch (self.action) {
                         case 'delete':
                             self.doDelete();
@@ -434,39 +449,8 @@ $(document).ready(function(){
                         case 'download':
                             self.doDownload();
                             break;
-                        default:
-                            self.doDecrypt();
-                            break;
                     }
                 }
-            };
-
-            this.ui.submitButton.on('click', this.submit);
-            this.ui.form.on('submit', function(e) {
-                e.preventDefault();
-                self.submit();
-            });
-
-            this.doDecrypt = function() {
-                $.post(
-                    baseUrl + '/sensitiveData/decrypt',
-                    {
-                        id: self.ui.idField.val(),
-                        password: self.ui.passwordField.val()
-                    },
-                    function(data) {
-                        newForm.setData(data);
-                        newForm.show('markdown');
-                        self.hide();
-                    },
-                    'json'
-                ).fail(function(data) {
-                    try {
-                        var response = JSON.parse(data.responseText);
-                        var alert = new alertMessage();
-                        alert.show(response.error.message, self.ui.modalBody);
-                    } catch(err) {}
-                });
             };
 
             this.doDelete = function() {
@@ -513,34 +497,6 @@ $(document).ready(function(){
                         alert.show(response.error.message, self.ui.modalBody);
                     } catch(err) {}
                 });
-            };
-        };
-
-        var alertMessage = function(severity) {
-            var self = this;
-            var severity = severity || 'warning';
-
-            var alertWrapper = $('<div />').addClass('alert alert-' + severity + ' alert-dismissable fade in');
-            alertWrapper.append(
-                $('<button data-dismiss="alert"/>').attr('type', 'button').addClass('close').prop('aria-hidden', true).text("x")
-            );
-
-            this.show = function(message, context, timeout) {
-                if (context.find('.alert').length > 0) {
-                    context.find('.alert').alert('close');
-                }
-                alertWrapper.append(message);
-                context.prepend(alertWrapper);
-                alertWrapper.alert();
-
-                if (timeout) {
-                    setTimeout(
-                        function() {
-                            alertWrapper.alert('close');
-                        },
-                        timeout
-                    );
-                }
             };
         };
 

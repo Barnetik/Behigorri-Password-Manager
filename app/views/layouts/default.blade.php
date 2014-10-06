@@ -1,18 +1,16 @@
 <!DOCTYPE html>
 <html ng-app="Behigorri">
     <link rel="stylesheet" type="text/css" href="{{ asset('bower_components/bootstrap/dist/css/bootstrap.min.css') }}" />
-    <link rel="stylesheet" type="text/css" href="{{ asset('bower_components/bootstrap-tagsinput/dist/bootstrap-tagsinput.css') }}" />
     <link rel="stylesheet" type="text/css" href="{{ asset('bower_components/fineuploader-dist/dist/fineuploader.css') }}" />
     <link rel="stylesheet" type="text/css" href="{{ asset('bower_components/fontawesome/css/font-awesome.min.css') }}" />
-    <link rel="stylesheet" type="text/css" href="{{ asset('bower_components/typeahead.js-bootstrap.css/typeahead.js-bootstrap.css') }}" />
+    <link rel="stylesheet" type="text/css" href="{{ asset('bower_components/ng-tags-input/ng-tags-input.min.css') }}" />
     <link rel="stylesheet" type="text/css" href="{{ asset('css/behigorri.css') }}" />
     <script type="text/javascript" src="{{ asset('bower_components/jquery/dist/jquery.min.js') }}"></script>
     <script type="text/javascript" src="{{ asset('bower_components/fineuploader-dist/dist/jquery.fineuploader.js') }}"></script>
     <script type="text/javascript" src="{{ asset('bower_components/bootstrap/dist/js/bootstrap.min.js') }}"></script>
     <script type="text/javascript" src="{{ asset('bower_components/markdown/lib/markdown.js') }}"></script>
-    <script type="text/javascript" src="{{ asset('bower_components/typeahead.js/dist/typeahead.bundle.min.js') }}"></script>
-    <script type="text/javascript" src="{{ asset('bower_components/bootstrap-tagsinput/dist/bootstrap-tagsinput.min.js') }}"></script>
-    <script type="text/javascript" src="{{ asset('bower_components/angularjs/angular.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('bower_components/angularjs/angular.min.js') }}"></script>
+    <script type="text/javascript" src="{{ asset('bower_components/ng-tags-input/ng-tags-input.min.js') }}"></script>
     @if (isset($scripts))
         @foreach ($scripts as $script)
             <script src="{{ asset($script) }}"></script>

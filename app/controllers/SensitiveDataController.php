@@ -57,55 +57,49 @@ class SensitiveDataController extends \BaseController {
                 'name' => 'required',
             ));
 
-            if ($validator->passes()) {
 
-                if (Input::get('id')) {
-                    $datum = SensitiveDatum::find(Input::get('id'));
-                    if (!$datum) {
-                        throw new \Exception('The datum could not be retrieved');
-                    }
-                } else {
-                    $datum = App::make('SensitiveDatum');
-                }
-
-                $role = $this->getCurrentRole();
-
-                $datum->fill(Input::all());
-                $datum->setRole($role);
-                $user = User::where('username', '=', Auth::user()->getAuthIdentifier())->first();
-                $datum->user_id = $user->id;
-
-                if (Input::hasFile('qqfile')) {
-                    $file = Input::file('qqfile');
-                    if ($file->isValid()) {
-                        $datum->file = $file->getClientOriginalName();
-                        $datum->file_contents = File::get($file->getPathname());
-                        unlink($file->getPathName());
-                    }
-                }
-
-                $datum->save();
-
-                $this->saveTags(Input::get('tags'), $datum);
+            if ($validator->fails()) {
+                return $this->_ajaxError($validator->messages()->all(), 400);
             }
 
-            if (Request::ajax()) {
-                if ($validator->fails()) {
-                    return $this->_ajaxError($validator->messages()->all(), 400);
+            if (Input::get('id')) {
+                $datum = SensitiveDatum::find(Input::get('id'));
+                if (!$datum) {
+                    throw new \Exception('The datum could not be retrieved');
                 }
-
-                return $datum->toArrayWithSuccess();
-
             } else {
-                $this->index($validator);
+                $datum = App::make('SensitiveDatum');
             }
+
+            $role = $this->getCurrentRole();
+
+            $datum->fill(Input::all());
+            $datum->setRole($role);
+            $user = User::where('username', '=', Auth::user()->getAuthIdentifier())->first();
+            $datum->user_id = $user->id;
+
+            if (Input::hasFile('qqfile')) {
+                $file = Input::file('qqfile');
+                if ($file->isValid()) {
+                    $datum->file = $file->getClientOriginalName();
+                    $datum->file_contents = File::get($file->getPathname());
+                    unlink($file->getPathName());
+                }
+            }
+
+            $datum->save();
+
+            $this->saveTags(Input::get('tags'), $datum);
+
+            $savedData = SensitiveDatum::with('User', 'Tags')->find($datum->id);
+            return $savedData->toArrayWithSuccess();
 	}
 
         protected function saveTags($tags, SensitiveDatum $datum)
         {
             $currentTags = array();
-            foreach ($tags as $tagname) {
-                $currentTags[] = $this->getTag($tagname)->id;
+            foreach ($tags as $tag) {
+                $currentTags[] = $this->getTag($tag['name'])->id;
             }
 
             $datum->tags()->sync($currentTags);
