@@ -24,6 +24,9 @@
         service.dataDecrypted = function(sensitiveData) {
             $rootScope.$broadcast('dataDecrypted', sensitiveData);
         };
+        service.dataDeleted = function(sensitiveData) {
+            $rootScope.$broadcast('dataDeleted', sensitiveData);
+        };
         return service;
     });
 
@@ -70,13 +73,35 @@
             var found = false;
             angular.forEach(self.origData, function(data, key) {
                 if (data.id === sensitiveData.id) {
-                    self.data[key] = sensitiveData;
+                    self.origData[key] = sensitiveData;
                     found = true;
                 }
             });
             if (!found) {
                 self.origData.push(sensitiveData);
             }
+            angular.forEach(self.data, function(data, key) {
+                if (data.id === sensitiveData.id) {
+                    self.data[key] = sensitiveData;
+                    found = true;
+                }
+            });
+            if (!found) {
+                self.data.push(sensitiveData);
+            }
+        });
+
+        $scope.$on('dataDeleted', function(event, sensitiveData) {
+            angular.forEach(self.origData, function(data, key) {
+                if (data.id === sensitiveData.id) {
+                    self.origData.splice(key, 1);
+                }
+            });
+            angular.forEach(self.data, function(data, key) {
+                if (data.id === sensitiveData.id) {
+                    self.data.splice(key, 1);
+                }
+            });
         });
 
         $scope.$on('filterByTag', function(event, tag) {
@@ -190,7 +215,8 @@
             self.$el.on('shown.bs.modal', function() {
                 self.$el.find('input.js-password').focus();
             });
-        };
+            $scope.alertMessage = '';
+            };
 
         this.hide = function() {
             this.$el.modal('hide');
@@ -225,7 +251,58 @@
                 error(function(response){
                     $scope.alertMessage = response.error.message;
                     $scope.alertClass = 'alert-warning';
-                });
+                }
+            );
+        };
+
+        this.delete = function() {
+            $http.post(
+                    self.baseUrl + '/sensitiveData/delete',
+                    {
+                        id: self.sensitiveData.id,
+                        password: self.password
+                    }
+                ).
+                success(function(data) {
+                    passwordModalService.dataDeleted(self.sensitiveData);
+                    self.hide();
+                }).
+                error(function(response){
+                    $scope.alertMessage = response.error.message;
+                    $scope.alertClass = 'alert-warning';
+                }
+            );
+        };
+
+        this.download = function() {
+            $http.post(
+                    self.baseUrl + '/sensitiveData/decrypt',
+                    {
+                        id: self.sensitiveData.id,
+                        password: self.password
+                    }
+                ).
+                success(function(data) {
+                    // TODO: This seems a little "ugly", try to do it better and without jquery
+                    var theForm = $('<form />');
+                    $('body').append(theForm);
+                    theForm.attr('action', self.baseUrl + '/sensitiveData/download');
+                    theForm.attr('method', 'post');
+                    theForm.hide();
+
+                    var id = $('<input />').attr('name', 'id').val(self.sensitiveData.id);
+                    var password = $('<input />').attr('name', 'password').val(self.password);
+                    theForm.append(id).append(password);
+                    theForm.submit();
+
+                    theForm.remove();
+                    self.hide();
+                }).
+                error(function(response){
+                    $scope.alertMessage = response.error.message;
+                    $scope.alertClass = 'alert-warning';
+                }
+            );
         };
 
         $scope.$on('decryptData', function(event, sensitiveData) {
@@ -272,46 +349,10 @@ $(document).ready(function(){
     var sensitiveData = (function() {
         var baseUrl = $('base').attr('href');
 
-        var sensitiveArea = new function() {
-            var self = this;
-
-            this.$el = $('.js-sensitive-data-tabs');
-
-            this.ui = {
-                closeButton: this.$el.find('.js-close-sensitive-data')
-            };
-
-            this.init = function() {
-                if (this.hasErrors()) {
-                    this.show();
-                }
-            };
-
-            this.hasErrors = function() {
-                return this.$el.find('.has-error').length > 0;
-            };
-
-            this.init();
-        };
-
         var sensitiveDataList = new function() {
             var self = this;
 
             this.$el = $('.js-sensitive-data-list');
-
-            this.updateRow = function(data) {
-                var loggedUser = $('#logged-user').text();
-                var currentRow = this.$el.find('#datum-' + data.id);
-                currentRow.find('.js-datum-name').html(data.name);
-                currentRow.find('.js-datum-metadata small').html(data.updated_at + ' (' + loggedUser + ')');
-                if (data.file) {
-                    if (currentRow.find('.js-download').length === 0) {
-                        var downloadLink = this.ui.sampleRow.find('.js-download').clone();
-                        downloadLink.data('datumId', data.id);
-                        currentRow.find('.js-action-links').prepend(downloadLink);
-                    }
-                }
-            };
 
             $('.js-action-link').tooltip();
         };
@@ -416,88 +457,41 @@ $(document).ready(function(){
                 self.ui.buttons.prop('disabled', false);
             });
 
+            this.submit = function() {
+                this.ui.loading.show();
+                this.ui.buttons.prop('disabled', true);
+
+                if (self.hasFiles()) {
+                    this.ui.fileField.fineUploader('uploadStoredFiles');
+                } else {
+                    $.post(
+                        this.ui.form.attr('action'),
+                        this.ui.form.serialize(),
+                        self.submitSuccess,
+                        'json'
+                    ).fail(function(data) {
+                        try {
+                            var response = JSON.parse(data.responseText);
+                            self.submitError(response);
+                        } catch (err) {}
+                    }).always(function(){
+                        self.ui.loading.hide();
+                        self.ui.buttons.prop('disabled', false);
+                    });
+                }
+            };
+
+            this.ui.cancelButton.on('click', function() {
+                self.reset();
+                self.hide();
+            });
+
             this.ui.fileLinks.click(function(e) {
                 e.preventDefault();
                 var currentElement = $('#datum-' + self.ui.idInput.val());
                 passwordModal.download(currentElement);
             });
 
-        };
-
-        var passwordModal = new function() {
-            var self = this;
-
-            this.action = 'decrypt';
-
-            this.$el = $('.js-decrypt-modal');
-
-            this.ui = {
-                idField: this.$el.find('input[name=id]'),
-                passwordField: this.$el.find('input[name=password]'),
-                submitButton: this.$el.find('.js-submit'),
-                modalTitle: this.$el.find('.modal-title'),
-                modalBody: this.$el.find('.modal-body'),
-                form: this.$el.find('form')
-            };
-
-            this.submit = function() {
-                if (self.ui.passwordField.val() !== '') {
-                    switch (self.action) {
-                        case 'delete':
-                            self.doDelete();
-                            break;
-                        case 'download':
-                            self.doDownload();
-                            break;
-                    }
-                }
-            };
-
-            this.doDelete = function() {
-                $.post(baseUrl + '/sensitiveData/delete', {
-                    id: self.ui.idField.val(),
-                    password: self.ui.passwordField.val()
-                }).done(function(data) {
-                    self.hide();
-                    $('#datum-' + self.ui.idField.val()).remove();
-                }).fail(function(data) {
-                    try {
-                        var response = JSON.parse(data.responseText);
-                        var alert = new alertMessage();
-                        alert.show(response.error.message, self.ui.modalBody);
-                    } catch(err) {}
-                });
-            };
-
-            this.doDownload = function() {
-                // We decrypt just to check that password is ok.
-                $.post(baseUrl + '/sensitiveData/decrypt', {
-                    id: self.ui.idField.val(),
-                    password: self.ui.passwordField.val()
-                }).done(function(data) {
-                    // Create new form and make the request. We cannot download files via ajax :(
-                    // We also need to append this to the DOM to make it work in firefox
-                    var theForm = $('<form />');
-                    $('body').append(theForm);
-                    theForm.attr('action', baseUrl + '/sensitiveData/download');
-                    theForm.attr('method', 'post');
-                    theForm.hide();
-
-                    var id = $('<input />').attr('name', 'id').val(self.ui.idField.val());
-                    var password = $('<input />').attr('name', 'password').val(self.ui.passwordField.val());
-                    theForm.append(id).append(password);
-                    theForm.submit();
-
-                    theForm.remove();
-                    self.hide();
-                }).fail(function(data) {
-                    try {
-                        var response = JSON.parse(data.responseText);
-                        var alert = new alertMessage();
-                        alert.show(response.error.message, self.ui.modalBody);
-                    } catch(err) {}
-                });
-            };
         };
 
         var markdownPlaceholder = new function() {
