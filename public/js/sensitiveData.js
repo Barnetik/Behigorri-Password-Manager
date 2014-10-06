@@ -1,5 +1,23 @@
 (function() {
-    var app = angular.module('Behigorri', ['ngTagsInput']);
+    var app = angular.module('Behigorri', ['ngTagsInput', 'btford.markdown']);
+
+    app.factory('SessionTimeoutInterceptor', function() {
+        var requestInterceptor = {
+            responseError: function(responseError) {
+                if (responseError.status === 401) {
+                    var baseUrl = angular.element('base').attr('href');
+                    window.location = baseUrl + '/login';
+                }
+                return responseError;
+            }
+        };
+        return requestInterceptor;
+    });
+
+    app.config(['$httpProvider', function($httpProvider) {
+        $httpProvider.interceptors.push('SessionTimeoutInterceptor');
+        $httpProvider.defaults.headers.common["X-Requested-With"] = 'XMLHttpRequest';
+    }]);
 
     app.factory('TagFilterService', function($rootScope) {
         var service = {};
@@ -50,12 +68,14 @@
         };
     }]);
 
-    app.controller('SensitiveDataListController', ['$scope', '$filter', 'PasswordModalService', function($scope, $filter, PasswordModalService) {
+    app.controller('SensitiveDataListController', ['$scope', '$filter', '$element', 'PasswordModalService', function($scope, $filter, $element, PasswordModalService) {
         var self = this;
         this.data = sensitiveData;
         this.origData = sensitiveData;
 
         this.filterTags = [];
+
+        $($element).find('.js-action-link').tooltip();
 
         this.decryptData = function(sensitiveData) {
             PasswordModalService.decryptData(sensitiveData);
@@ -198,7 +218,6 @@
             $event.preventDefault();
             $scope.alertMessage = '';
             if (self.hasFiles()) {
-//                fileField.fineUploader('setParams', $scope.sensitiveData);
                 fileField.fineUploader('uploadStoredFiles');
             } else {
                 $http.post(
@@ -373,103 +392,3 @@
         });
     }]);
 })();
-
-$(document).ready(function(){
-    $(document).ajaxError(function(event, jqxhr, settings, thrownError) {
-        if (jqxhr.status === 401) {
-            window.location = $('base').attr('href') + '/login';
-        }
-    });
-    var sensitiveData = (function() {
-        var baseUrl = $('base').attr('href');
-
-        var sensitiveDataList = new function() {
-            var self = this;
-
-            this.$el = $('.js-sensitive-data-list');
-
-            $('.js-action-link').tooltip();
-        };
-
-        var newForm = new function() {
-            var self = this;
-
-            this.$el = $('.js-new-form');
-
-            this.hasFiles = false;
-
-            this.ui = {
-                form: this.$el.find('form'),
-                loading: this.$el.find('.js-add-new-buttons .fa-spinner'),
-                buttons: this.$el.find('input:submit,input:reset'),
-                sendButton: this.$el.find('.js-add-new-send'),
-                cancelButton: this.$el.find('.js-add-new-cancel'),
-                fields: this.$el.find('input,textarea').not('input:submit,input:reset'),
-                idInput: this.$el.find('.js-form-id'),
-                nameInput: this.$el.find('.js-form-name'),
-                tagsField: this.$el.find('#tags'),
-                valueInput: this.$el.find('.js-form-value'),
-                fileLinks: $(this.$el.parents('.tab-content')[0]).find('.js-file-link'),
-                alertBox: this.$el.find('.js-alert-box'),
-                fileField: $('#form-fineupload')
-            };
-
-            this.show = function(tabName) {
-                sensitiveArea.show(tabName);
-            };
-
-            this.hide = function() {
-                sensitiveArea.hide();
-            };
-
-            this.reset = function() {
-                this.ui.fields.val('').change();
-                this.ui.tagsField.tagsinput('removeAll');
-                this.ui.fileLinks.text('').attr('href', '');
-                var qqFileList = this.$el.find('ul.qq-upload-list');
-                if (qqFileList.length > 0) {
-                    qqFileList.html('');
-                }
-            };
-
-        };
-
-        var markdownPlaceholder = new function() {
-            var self = this;
-
-            this.$el = $('.js-markdown-placeholder');
-
-            this.ui = {
-                'title': this.$el.find('.js-markdown-title'),
-                'body': this.$el.find('.js-markdown-body')
-            };
-
-            newForm.ui.nameInput.on('change', function() {
-                self.ui.title.html($(this).val());
-            });
-
-            newForm.ui.valueInput.on('change', function() {
-                self.ui.body.html(markdown.toHTML($(this).val()));
-            });
-        };
-
-        var rawPlaceholder = new function() {
-            var self = this;
-
-            this.$el = $('.js-raw-placeholder');
-
-            this.ui = {
-                'title': this.$el.find('.js-raw-title'),
-                'body': this.$el.find('.js-raw-body')
-            };
-
-            newForm.ui.nameInput.on('change', function() {
-                self.ui.title.html($(this).val());
-            });
-
-            newForm.ui.valueInput.on('change', function() {
-                self.ui.body.html($(this).val());
-            });
-        };
-    })();
-});

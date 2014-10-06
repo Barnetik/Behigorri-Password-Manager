@@ -43,20 +43,14 @@
                 <div class="tab-pane" ng-class="{active:sensitiveArea.isSelectedTab('markdown')}" id="markdown-sensitive-data">
                     <div class="row js-markdown-placeholder">
                         <div class="col-xs-12">
-                            <h2 class="js-markdown-title"></h2>
-                            <div class="js-markdown-body"></div>
-                            <a href="#" class="js-file-link"></a>
+                            @include('sensitiveData/angular/sensitive-data-markdown')
                         </div>
                     </div>
                 </div>
                 <div class="tab-pane" ng-class="{active:sensitiveArea.isSelectedTab('raw')}" id="raw-sensitive-data">
                     <div class="row js-raw-placeholder">
                         <div class="col-xs-12">
-                            <h2 class="js-raw-title"></h2>
-                            <div>
-                                <pre class="js-raw-body"></pre>
-                            </div>
-                            <a href="#" class="js-file-link"></a>
+                            @include('sensitiveData/angular/sensitive-data-raw')
                         </div>
                     </div>
                 </div>

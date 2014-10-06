@@ -55,7 +55,6 @@
     <div class="form-group">
         <p>
             <a href ng-click="downloadFile()">{{sensitiveData.file}}</a>
-            <a href="#" class="js-file-link"></a>
         </p>
     </div>
     <div id="form-fineupload"></div>
