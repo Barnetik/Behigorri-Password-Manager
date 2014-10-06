@@ -4,7 +4,7 @@
     'files' => true,
     'id' => 'qq-form',
     'novalidate' => true,
-    'ng-submit' => 'sensitiveArea.submitData($event)'
+    'ng-submit' => 'submitData($event)'
 )) ?>
     <?=Form::input(
         'hidden',
@@ -54,6 +54,7 @@
     </div>
     <div class="form-group">
         <p>
+            <a href ng-click="downloadFile()">{{sensitiveData.file}}</a>
             <a href="#" class="js-file-link"></a>
         </p>
     </div>

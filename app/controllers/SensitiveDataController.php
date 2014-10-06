@@ -89,7 +89,7 @@ class SensitiveDataController extends \BaseController {
 
             $datum->save();
 
-            $this->saveTags(Input::get('tags'), $datum);
+            $this->saveTags(Input::get('tags', array()), $datum);
 
             $savedData = SensitiveDatum::with('User', 'Tags')->find($datum->id);
             return $savedData->toArrayWithSuccess();

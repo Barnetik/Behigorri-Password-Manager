@@ -133,11 +133,15 @@
         });
     }]);
 
-    app.controller('SensitiveDataAreaController', ['$http', '$scope', 'SensitiveDataService', function($http, $scope, sensitiveDataService) {
+    app.controller('SensitiveDataAreaController', ['$http', '$scope', '$element', 'SensitiveDataService', 'PasswordModalService', function($http, $scope, $element, sensitiveDataService, passwordModalService) {
         var self = this;
 
         this.baseUrl = angular.element('base').attr('href');
         this.selectedTab = 'form';
+        this.$el = $($element);
+
+        var fileField = $($element).find('#form-fineupload');
+
         $scope.show = false;
         $scope.sensitiveData = {};
 
@@ -164,21 +168,51 @@
             return $http.get(self.baseUrl + '/tags/search?query=' + query);
         };
 
-        this.submitData = function($event) {
+        $scope.downloadFile = function() {
+            passwordModalService.downloadFile($scope.sensitiveData);
+        };
+
+        this.hasFiles = function() {
+            return fileField.fineUploader('getUploads').length > 0;
+        };
+
+        fileField.fineUploader({
+            multiple: false,
+            form: {
+                interceptSubmit: false
+            },
+            validation: {
+                sizeLimit: 15000000
+            }
+        }).on('error', function(event, id, name, response, xhr){
+            $scope.alertMessage = response.error.message;
+            fileField.fineUploader('reset');
+        }).on('complete', function(event, id, name, data) {
+            fileField.fineUploader('reset');
+            $scope.sensitiveData.id = data.id;
+            // We resubmit the form to set the tags.
+            $scope.submitData(event);
+        });
+
+        $scope.submitData = function($event) {
             $event.preventDefault();
             $scope.alertMessage = '';
-
-            $http.post(
-                self.baseUrl + '/sensitiveData',
-                $scope.sensitiveData
-            ).success(function(data) {
-                var value = $scope.sensitiveData.value;
-                $scope.sensitiveData = data;
-                $scope.sensitiveData.value = value;
-                sensitiveDataService.updateListData(angular.copy($scope.sensitiveData));
-            }).error(function(data) {
-                $scope.alertMessage = data.error.message;
-            });
+            if (self.hasFiles()) {
+//                fileField.fineUploader('setParams', $scope.sensitiveData);
+                fileField.fineUploader('uploadStoredFiles');
+            } else {
+                $http.post(
+                    self.baseUrl + '/sensitiveData',
+                    $scope.sensitiveData
+                ).success(function(data) {
+                    var value = $scope.sensitiveData.value;
+                    $scope.sensitiveData = data;
+                    $scope.sensitiveData.value = value;
+                    sensitiveDataService.updateListData(angular.copy($scope.sensitiveData));
+                }).error(function(data) {
+                    $scope.alertMessage = data.error.message;
+                });
+            }
         };
 
         $scope.$on('dataDecrypted', function(event, sensitiveData){
@@ -397,100 +431,6 @@ $(document).ready(function(){
                     qqFileList.html('');
                 }
             };
-
-            this.ui.loading.hide = function() {
-                if (!self.ui.loading.hasClass('hide')) {
-                    self.ui.loading.addClass('hide');
-                }
-            };
-
-            this.ui.loading.show = function() {
-                if (self.ui.loading.hasClass('hide')) {
-                    self.ui.loading.removeClass('hide');
-                }
-            };
-
-            this.hasFiles = function() {
-                return self.ui.fileField.fineUploader('getUploads').length > 0;
-            };
-
-            this.submitSuccess = function(data) {
-                if (data.success) {
-                    var alert = new alertMessage('success');
-                    if (self.ui.idInput.val()) {
-                        alert.show('Data updated', self.ui.alertBox, 3000);
-                        sensitiveDataList.updateRow(data);
-                    } else  {
-                        alert.show('New data created', self.ui.alertBox, 3000);
-                        self.ui.idInput.val(data.id);
-                        sensitiveDataList.createRow(data);
-                    }
-                    if (data.file) {
-                       self.ui.fileLinks.text(data.file);
-                    }
-                }
-            };
-
-            this.submitError = function(response) {
-                var alert = new alertMessage();
-                alert.show(response.error.message, self.ui.alertBox, 3000);
-            };
-
-            this.ui.fileField.fineUploader({
-                multiple: false,
-                form: {
-                    interceptSubmit: false
-                },
-                validation: {
-                    sizeLimit: 15000000
-                }
-            }).on('error', function(event, id, name, errorReason, response){
-                console.log(event, id, name, errorReason, response);
-                self.submitError(response);
-                self.ui.fileField.fineUploader('reset');
-                self.ui.loading.hide();
-                self.ui.buttons.prop('disabled', false);
-            }).on('complete', function(event, id, name, data){
-                self.submitSuccess(data);
-                self.ui.fileField.fineUploader('reset');
-                self.ui.loading.hide();
-                self.ui.buttons.prop('disabled', false);
-            });
-
-            this.submit = function() {
-                this.ui.loading.show();
-                this.ui.buttons.prop('disabled', true);
-
-                if (self.hasFiles()) {
-                    this.ui.fileField.fineUploader('uploadStoredFiles');
-                } else {
-                    $.post(
-                        this.ui.form.attr('action'),
-                        this.ui.form.serialize(),
-                        self.submitSuccess,
-                        'json'
-                    ).fail(function(data) {
-                        try {
-                            var response = JSON.parse(data.responseText);
-                            self.submitError(response);
-                        } catch (err) {}
-                    }).always(function(){
-                        self.ui.loading.hide();
-                        self.ui.buttons.prop('disabled', false);
-                    });
-                }
-            };
-
-            this.ui.cancelButton.on('click', function() {
-                self.reset();
-                self.hide();
-            });
-
-            this.ui.fileLinks.click(function(e) {
-                e.preventDefault();
-                var currentElement = $('#datum-' + self.ui.idInput.val());
-                passwordModal.download(currentElement);
-            });
 
         };
 
