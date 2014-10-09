@@ -20,34 +20,34 @@
             </button>
 
             <ul class="nav nav-tabs" role="tablist">
-              <li ng-class="{active:sensitiveArea.isSelectedTab('form')}" ng-click="sensitiveArea.selectTab('form')">
+              <li ng-class="{active:isSelectedTab('form')}" ng-click="selectTab('form')">
                   <a href id="edit-sensitive-data-tab">Edit</a>
               </li>
-              <li ng-class="{active:sensitiveArea.isSelectedTab('markdown')}" ng-click="sensitiveArea.selectTab('markdown')">
+              <li ng-class="{active:isSelectedTab('markdown')}" ng-click="selectTab('markdown')">
                   <a href id="markdown-sensitive-data-tab">Markdown</a>
               </li>
-              <li ng-class="{active:sensitiveArea.isSelectedTab('raw')}" ng-click="sensitiveArea.selectTab('raw')">
+              <li ng-class="{active:isSelectedTab('raw')}" ng-click="selectTab('raw')">
                   <a href id="raw-sensitive-data-tab">Raw</a>
               </li>
             </ul>
 
             <!-- Tab panes -->
             <div class="tab-content">
-                <div class="tab-pane" ng-class="{active:sensitiveArea.isSelectedTab('form')}" id="edit-sensitive-data">
+                <div class="tab-pane" ng-class="{active:isSelectedTab('form')}" id="edit-sensitive-data">
                     <div class="row js-new-form">
                         <div class="col-xs-12">
                             @include('sensitiveData/angular/sensitive-data-form')
                         </div>
                     </div>
                 </div>
-                <div class="tab-pane" ng-class="{active:sensitiveArea.isSelectedTab('markdown')}" id="markdown-sensitive-data">
+                <div class="tab-pane" ng-class="{active:isSelectedTab('markdown')}" id="markdown-sensitive-data">
                     <div class="row js-markdown-placeholder">
                         <div class="col-xs-12">
                             @include('sensitiveData/angular/sensitive-data-markdown')
                         </div>
                     </div>
                 </div>
-                <div class="tab-pane" ng-class="{active:sensitiveArea.isSelectedTab('raw')}" id="raw-sensitive-data">
+                <div class="tab-pane" ng-class="{active:isSelectedTab('raw')}" id="raw-sensitive-data">
                     <div class="row js-raw-placeholder">
                         <div class="col-xs-12">
                             @include('sensitiveData/angular/sensitive-data-raw')

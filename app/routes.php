@@ -13,9 +13,8 @@
 
 Route::group(array('before' => 'auth'), function()
 {
-    Route::get('/', function() {
-        return Redirect::to('sensitiveData');
-    });
+    Route::get('/', 'HomeController@index');
+    Route::get('/sensitiveData/list', 'SensitiveDataController@getList');
 
     Route::post('/sensitiveData/decrypt', 'SensitiveDataController@decrypt');
     Route::post('/sensitiveData/delete', 'SensitiveDataController@delete');

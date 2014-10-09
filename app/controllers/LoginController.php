@@ -1,6 +1,6 @@
 <?php
 
-class LoginController extends BaseController 
+class LoginController extends BaseController
 {
 	public function showLoginForm()
 	{
@@ -13,15 +13,15 @@ class LoginController extends BaseController
                 'username' => trim(Input::get('username')),
                 'password' => Input::get('password')
             );
-            
+
             if (Auth::attempt($credentials)) {
                 $this->createUserIfNotExists($credentials['username']);
-                return Redirect::to('');
+                return Redirect::to('/');
             }
-            
+
             $this->showLoginForm();
 	}
-        
+
         public function createUserIfNotExists($username)
         {
             $user = User::where('username', '=', $username)->first();

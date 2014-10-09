@@ -5,7 +5,7 @@
                 <h3 class="panel-title">Please sign in</h3>
             </div>
             <div class="panel-body">
-                <form accept-charset="UTF-8" role="form" method="post">
+                {{ Form::open(array('method' => 'post')) }}
                     <fieldset>
                         <div class="form-group">
                             <input class="form-control" placeholder="Username" name="username" type="text" autofocus="true">
@@ -17,7 +17,7 @@
 
                         <input class="btn btn-lg btn-success btn-block" type="submit" value="Login">
                     </fieldset>
-                </form>
+                {{ Form::close() }}
             </div>
         </div>
     </div>

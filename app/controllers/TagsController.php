@@ -10,7 +10,7 @@ class TagsController extends \BaseController {
 	 */
 	public function index()
 	{
-            $tags = Tag::all();
+            $tags = Tag::with('SensitiveData')->get();
             return Response::json($tags);
 	}
 

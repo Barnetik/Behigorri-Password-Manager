@@ -13,11 +13,7 @@
     <script type="text/javascript" src="{{ asset('bower_components/showdown/compressed/showdown.js') }}"></script>
     <script type="text/javascript" src="{{ asset('bower_components/angular-markdown-directive/markdown.js') }}"></script>
     <script type="text/javascript" src="{{ asset('bower_components/ng-tags-input/ng-tags-input.min.js') }}"></script>
-    @if (isset($scripts))
-        @foreach ($scripts as $script)
-            <script src="{{ asset($script) }}"></script>
-        @endforeach
-    @endif
+    <script type="text/javascript" src="{{ asset('js/sensitiveData.js') }}"></script>
     <script type="text/template" id="qq-template">
         <div class="qq-uploader-selector qq-uploader">
             <div class="qq-upload-drop-area-selector qq-upload-drop-area" qq-hide-dropzone>
@@ -63,9 +59,22 @@
                 @if (Auth::check())
                 <!-- Collect the nav links, forms, and other content for toggling -->
                 <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
-                    {{ Form::open(array('method' => 'get', 'class' => 'navbar-form navbar-left', 'role' => 'search'))}}
+                    {{ Form::open(array(
+                        'method' => 'get',
+                        'class' => 'navbar-form navbar-left',
+                        'role' => 'search',
+                        'ng-controller' => 'SensitiveDataSearchController',
+                        'ng-submit' => 'submitSearch($event)'
+                    ))}}
                         <div class="form-group">
-                            {{ Form::input('text', 'query', $query, array('class' => 'form-control', 'placeholder' => 'Search'))}}
+                            {{ Form::input('text', 'query', null,
+                                array(
+                                    'class' => 'form-control',
+                                    'placeholder' => 'Search',
+                                    'ng-model' => 'query',
+                                    'ng-change' => 'search($event)'
+                                )
+                            )}}
                         </div>
                         <button type="submit" class="btn btn-default">Submit</button>
                     {{ Form::close() }}

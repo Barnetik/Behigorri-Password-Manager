@@ -33,7 +33,6 @@
                 'ng-model' => 'sensitiveData.name'
             )
         )?>
-        <?=Form::errorMsg($validator, 'name')?>
     </div>
     <div class="form-group">
         <?=Form::textarea('value', null,
@@ -44,13 +43,11 @@
                     'ng-model' => 'sensitiveData.value'
                 )
         )?>
-        <?=Form::errorMsg($validator, 'value')?>
     </div>
     <div class="form-group">
         <tags-input ng-model="sensitiveData.tags" display-property="name">
             <auto-complete source="getAvailableTags($query)" min-length="1"></auto-complete>
         </tags-input>
-        <?=Form::errorMsg($validator, 'tags')?>
     </div>
     <div class="form-group">
         <p>

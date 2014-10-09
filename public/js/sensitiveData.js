@@ -14,10 +14,14 @@
         return requestInterceptor;
     });
 
-    app.config(['$httpProvider', function($httpProvider) {
+    app.config(['$httpProvider', '$provide', function($httpProvider, $provide) {
         $httpProvider.interceptors.push('SessionTimeoutInterceptor');
         $httpProvider.defaults.headers.common["X-Requested-With"] = 'XMLHttpRequest';
     }]);
+
+    app.factory('baseUrl', function($rootScope) {
+        return angular.element('base').attr('href');
+    });
 
     app.factory('TagFilterService', function($rootScope) {
         var service = {};
@@ -53,94 +57,120 @@
         service.updateListData = function(sensitiveData) {
             $rootScope.$broadcast('updateListData', sensitiveData);
         };
+        service.filterByQuery = function(query) {
+            $rootScope.$broadcast('filterByQuery', query);
+        };
         return service;
     });
 
-    app.controller('TagsController', ['$scope', 'TagFilterService', function($scope, TagFilterService) {
-        this.tags = tags;
+    app.controller('TagsController',
+    ['$scope', '$http', 'baseUrl', 'TagFilterService',
+    function($scope, $http, baseUrl, TagFilterService) {
+        var self = this;
+        $scope.tags = [];
 
-        this.hasSensitiveData = function(tag) {
+        this.initData = function() {
+            $http.get(baseUrl + '/tags').success(function(data) {
+                $scope.tags = data;
+            });
+        };
+        this.initData();
+
+        $scope.hasSensitiveData = function(tag) {
             return tag.sensitive_data.length > 0
         };
 
-        this.filterSensitiveData = function(tag) {
+        $scope.filterSensitiveData = function(tag) {
             TagFilterService.filterByTag(tag);
         };
+
+        $scope.$on('dataDeleted', function() {
+            self.initData();
+        });
+
     }]);
 
-    app.controller('SensitiveDataListController', ['$scope', '$filter', '$element', 'PasswordModalService', function($scope, $filter, $element, PasswordModalService) {
-        var self = this;
-        this.data = sensitiveData;
-        this.origData = sensitiveData;
+    app.controller('SensitiveDataListController',
+    ['$scope', '$http',  '$filter', '$element', 'baseUrl', 'PasswordModalService',
+    function($scope, $http, $filter, $element, baseUrl, PasswordModalService) {
 
-        this.filterTags = [];
+        $scope.data = [];
+        $scope.origData = [];
+        $scope.filterTags = [];
 
         $($element).find('.js-action-link').tooltip();
+        this.initData = function() {
+            $http.get(baseUrl + '/sensitiveData/list').success(function(data) {
+                $scope.origData = data;
+                $scope.data = data;
+            });
+        };
+        this.initData();
 
-        this.decryptData = function(sensitiveData) {
+        $scope.decryptData = function(sensitiveData) {
             PasswordModalService.decryptData(sensitiveData);
         };
 
-        this.deleteData = function(sensitiveData) {
+        $scope.deleteData = function(sensitiveData) {
             PasswordModalService.deleteData(sensitiveData);
         };
 
-        this.downloadFile = function(sensitiveData) {
+        $scope.downloadFile = function(sensitiveData) {
             PasswordModalService.downloadFile(sensitiveData);
         };
 
         $scope.$on('updateListData', function(event, sensitiveData) {
             var found = false;
-            angular.forEach(self.origData, function(data, key) {
+            angular.forEach($scope.origData, function(data, key) {
                 if (data.id === sensitiveData.id) {
-                    self.origData[key] = sensitiveData;
+                    $scope.origData[key] = sensitiveData;
                     found = true;
                 }
             });
             if (!found) {
-                self.origData.push(sensitiveData);
+                $scope.origData.push(sensitiveData);
             }
-            angular.forEach(self.data, function(data, key) {
+            angular.forEach($scope.data, function(data, key) {
                 if (data.id === sensitiveData.id) {
-                    self.data[key] = sensitiveData;
+                    $scope.data[key] = sensitiveData;
                     found = true;
                 }
             });
             if (!found) {
-                self.data.push(sensitiveData);
+                $scope.data.push(sensitiveData);
             }
         });
 
         $scope.$on('dataDeleted', function(event, sensitiveData) {
-            angular.forEach(self.origData, function(data, key) {
+            angular.forEach($scope.origData, function(data, key) {
                 if (data.id === sensitiveData.id) {
-                    self.origData.splice(key, 1);
+                    $scope.origData.splice(key, 1);
                 }
             });
-            angular.forEach(self.data, function(data, key) {
+            angular.forEach($scope.data, function(data, key) {
                 if (data.id === sensitiveData.id) {
-                    self.data.splice(key, 1);
+                    $scope.data.splice(key, 1);
                 }
             });
         });
 
         $scope.$on('filterByTag', function(event, tag) {
-            var tagIndex = self.filterTags.indexOf(tag);
+            var tagIndex = $scope.filterTags.indexOf(tag);
 
-            if (tagIndex >= 0) {
-                self.filterTags.splice(tagIndex, 1);
+            if (tagIndex >= 0) { // Tag exists, remove from filter
+                $scope.filterTags.splice(tagIndex, 1);
                 tag.labelClass = 'label-default';
-            } else {
-                self.filterTags.push(tag);
+            } else { // New Tag, add to filter
+                $scope.filterTags.push(tag);
                 tag.labelClass = 'label-primary';
             }
 
-            if (self.filterTags.length === 0) {
-                self.data = self.origData;
+            if ($scope.filterTags.length === 0) {
+                $scope.data = $scope.origData;
             } else {
-                self.data = $filter('filter')(self.origData, function(value) {
+                $scope.data = $filter('filter')($scope.origData, function(value) {
                     var found = false;
-                    angular.forEach(self.filterTags, function(filterTag) {
+                    angular.forEach($scope.filterTags, function(filterTag) {
                         angular.forEach(value.tags, function(valueTag) {
                             if (valueTag.id === filterTag.id) {
                                 found = true;
@@ -151,17 +181,24 @@
                 });
             }
         });
+
+        $scope.$on('filterByQuery', function(event, query) {
+            if (query.trim().length === 0) {
+                $scope.data = $scope.origData;
+            } else {
+                $scope.data = $filter('filter')($scope.origData, function(value) {
+                    return value.name.toLowerCase().indexOf(query.toLowerCase()) >= 0;
+                });
+            }
+        });
     }]);
 
-    app.controller('SensitiveDataAreaController', ['$http', '$scope', '$element', 'SensitiveDataService', 'PasswordModalService', function($http, $scope, $element, sensitiveDataService, passwordModalService) {
-        var self = this;
-
-        this.baseUrl = angular.element('base').attr('href');
-        this.selectedTab = 'form';
-        this.$el = $($element);
-
+    app.controller('SensitiveDataAreaController',
+    ['$http', '$scope', '$element', 'baseUrl', 'SensitiveDataService', 'PasswordModalService',
+    function($http, $scope, $element, baseUrl, sensitiveDataService, passwordModalService) {
         var fileField = $($element).find('#form-fineupload');
 
+        $scope.selectedTab = 'form';
         $scope.show = false;
         $scope.sensitiveData = {};
 
@@ -176,16 +213,16 @@
             $scope.sensitiveData = {};
         };
 
-        this.isSelectedTab = function(tabName) {
-            return this.selectedTab === tabName;
+        $scope.isSelectedTab = function(tabName) {
+            return $scope.selectedTab === tabName;
         };
 
-        this.selectTab = function(tabName) {
-            this.selectedTab = tabName;
+        $scope.selectTab = function(tabName) {
+            $scope.selectedTab = tabName;
         };
 
         $scope.getAvailableTags = function(query) {
-            return $http.get(self.baseUrl + '/tags/search?query=' + query);
+            return $http.get(baseUrl + '/tags/search?query=' + query);
         };
 
         $scope.downloadFile = function() {
@@ -217,11 +254,11 @@
         $scope.submitData = function($event) {
             $event.preventDefault();
             $scope.alertMessage = '';
-            if (self.hasFiles()) {
+            if ($scope.hasFiles()) {
                 fileField.fineUploader('uploadStoredFiles');
             } else {
                 $http.post(
-                    self.baseUrl + '/sensitiveData',
+                    baseUrl + '/sensitiveData',
                     $scope.sensitiveData
                 ).success(function(data) {
                     var value = $scope.sensitiveData.value;
@@ -240,66 +277,77 @@
         });
     }]);
 
-    app.controller('PasswordModalController', ['$scope', '$element', '$http', 'PasswordModalService', function($scope, $element, $http, passwordModalService) {
-        var self = this;
-        this.$el = $($element);
-        this.action = '';
-        this.titleClass = 'text-info';
-        this.submitClass = 'btn-info';
-        this.submitText = 'Decrypt Now';
-        this.submitDisabled = true;
-        this.password = '';
-        this.sensitiveData = {};
+    app.controller('SensitiveDataSearchController', ['$scope', '$http', 'baseUrl', 'SensitiveDataService', function($scope, $http, baseUrl, sensitiveDataService) {
+        $scope.query = '';
 
-        this.baseUrl = angular.element('base').attr('href');
+        $scope.search = function() {
+            sensitiveDataService.filterByQuery($scope.query);
+        };
+
+        $scope.submitSearch = function($event) {
+            $event.preventDefault();
+            $scope.search();
+        };
+    }]);
+
+    app.controller('PasswordModalController', ['$scope', '$element', '$http', 'baseUrl', 'PasswordModalService', function($scope, $element, $http, baseUrl, passwordModalService) {
+        $scope.$el = $($element);
+        $scope.action = '';
+        $scope.titleClass = 'text-info';
+        $scope.submitClass = 'btn-info';
+        $scope.submitText = 'Decrypt Now';
+        $scope.submitDisabled = true;
+        $scope.password = '';
+        $scope.sensitiveData = {};
+
         $scope.alertMessage = '';
         $scope.alertClass = 'alert-warning';
 
-        this.checkSubmitable = function(value) {
-            if (self.password.length > 0) {
-                self.submitDisabled = false;
+        $scope.checkSubmitable = function(value) {
+            if ($scope.password.length > 0) {
+                $scope.submitDisabled = false;
             } else {
-                self.submitDisabled = true;
+                $scope.submitDisabled = true;
             }
         };
 
-        this.show = function() {
-            self.$el.modal('show');
-            self.$el.on('shown.bs.modal', function() {
-                self.$el.find('input.js-password').focus();
+        $scope.show = function() {
+            $scope.$el.modal('show');
+            $scope.$el.on('shown.bs.modal', function() {
+                $scope.$el.find('input.js-password').focus();
             });
             $scope.alertMessage = '';
             };
 
-        this.hide = function() {
-            this.$el.modal('hide');
+        $scope.hide = function() {
+            $scope.$el.modal('hide');
         };
 
-        this.performAction = function() {
-            switch (self.action) {
+        $scope.performAction = function() {
+            switch ($scope.action) {
                 case 'decrypt':
-                    self.decrypt();
+                    $scope.decrypt();
                     break;
                 case 'delete':
-                    self.delete();
+                    $scope.delete();
                     break;
                 case 'download':
-                    self.download();
+                    $scope.download();
                     break;
             }
         };
 
-        this.decrypt = function() {
+        $scope.decrypt = function() {
             $http.post(
-                    self.baseUrl + '/sensitiveData/decrypt',
+                    baseUrl + '/sensitiveData/decrypt',
                     {
-                        id: self.sensitiveData.id,
-                        password: self.password
+                        id: $scope.sensitiveData.id,
+                        password: $scope.password
                     }
                 ).
                 success(function(data) {
                     passwordModalService.dataDecrypted(data);
-                    self.hide();
+                    $scope.hide();
                 }).
                 error(function(response){
                     $scope.alertMessage = response.error.message;
@@ -308,17 +356,17 @@
             );
         };
 
-        this.delete = function() {
+        $scope.delete = function() {
             $http.post(
-                    self.baseUrl + '/sensitiveData/delete',
+                    baseUrl + '/sensitiveData/delete',
                     {
-                        id: self.sensitiveData.id,
-                        password: self.password
+                        id: $scope.sensitiveData.id,
+                        password: $scope.password
                     }
                 ).
                 success(function(data) {
-                    passwordModalService.dataDeleted(self.sensitiveData);
-                    self.hide();
+                    passwordModalService.dataDeleted($scope.sensitiveData);
+                    $scope.hide();
                 }).
                 error(function(response){
                     $scope.alertMessage = response.error.message;
@@ -327,29 +375,29 @@
             );
         };
 
-        this.download = function() {
+        $scope.download = function() {
             $http.post(
-                    self.baseUrl + '/sensitiveData/decrypt',
+                    baseUrl + '/sensitiveData/decrypt',
                     {
-                        id: self.sensitiveData.id,
-                        password: self.password
+                        id: $scope.sensitiveData.id,
+                        password: $scope.password
                     }
                 ).
                 success(function(data) {
                     // TODO: This seems a little "ugly", try to do it better and without jquery
                     var theForm = $('<form />');
                     $('body').append(theForm);
-                    theForm.attr('action', self.baseUrl + '/sensitiveData/download');
+                    theForm.attr('action', baseUrl + '/sensitiveData/download');
                     theForm.attr('method', 'post');
                     theForm.hide();
 
-                    var id = $('<input />').attr('name', 'id').val(self.sensitiveData.id);
-                    var password = $('<input />').attr('name', 'password').val(self.password);
+                    var id = $('<input />').attr('name', 'id').val($scope.sensitiveData.id);
+                    var password = $('<input />').attr('name', 'password').val($scope.password);
                     theForm.append(id).append(password);
                     theForm.submit();
 
                     theForm.remove();
-                    self.hide();
+                    $scope.hide();
                 }).
                 error(function(response){
                     $scope.alertMessage = response.error.message;
@@ -359,36 +407,36 @@
         };
 
         $scope.$on('decryptData', function(event, sensitiveData) {
-            self.action = 'decrypt';
-            self.titleClass = 'text-info';
-            self.submitText = 'Decrypt Now';
-            self.submitClass = 'btn-info';
-            self.submitDisabled = true;
-            self.password = '';
-            self.sensitiveData = sensitiveData;
-            self.show();
+            $scope.action = 'decrypt';
+            $scope.titleClass = 'text-info';
+            $scope.submitText = 'Decrypt Now';
+            $scope.submitClass = 'btn-info';
+            $scope.submitDisabled = true;
+            $scope.password = '';
+            $scope.sensitiveData = sensitiveData;
+            $scope.show();
         });
 
         $scope.$on('deleteData', function(event, sensitiveData) {
-            self.action = 'delete';
-            self.titleClass = 'text-danger';
-            self.submitText = 'Delete Now';
-            self.submitClass = 'btn-danger';
-            self.submitDisabled = true;
-            self.password = '';
-            self.sensitiveData = sensitiveData;
-            self.show();
+            $scope.action = 'delete';
+            $scope.titleClass = 'text-danger';
+            $scope.submitText = 'Delete Now';
+            $scope.submitClass = 'btn-danger';
+            $scope.submitDisabled = true;
+            $scope.password = '';
+            $scope.sensitiveData = sensitiveData;
+            $scope.show();
         });
 
         $scope.$on('downloadFile', function(event, sensitiveData) {
-            self.action = 'download';
-            self.titleClass = 'text-info';
-            self.submitText = 'Download Now';
-            self.submitClass = 'btn-info';
-            self.submitDisabled = true;
-            self.password = '';
-            self.sensitiveData = sensitiveData;
-            self.show();
+            $scope.action = 'download';
+            $scope.titleClass = 'text-info';
+            $scope.submitText = 'Download Now';
+            $scope.submitClass = 'btn-info';
+            $scope.submitDisabled = true;
+            $scope.password = '';
+            $scope.sensitiveData = sensitiveData;
+            $scope.show();
         });
     }]);
 })();

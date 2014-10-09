@@ -16,23 +16,18 @@ class SensitiveDataController extends \BaseController {
             if (Input::has('query') && trim(Input::get('query'))) {
                 $term = trim(Input::get('query'));
                 $sensitiveData = SensitiveDatum::with('User', 'Tags')->where("name", "like", "%" . $term . "%")->get();
-            } else {
-                $sensitiveData = SensitiveDatum::with('User', 'Tags')->get();
             }
 
-            $tags = Tag::with('SensitiveData')->get();
-
             $this->layout->query = $term;
-
-            $this->layout->content = View::make('sensitiveData.index')
-                ->with([
-                    'sensitiveData' => $sensitiveData,
-                    'validator' => $validator,
-                    'tags' => $tags
-                ]);
-
+            $this->layout->content = View::make('sensitiveData.index');
             $this->layout->with('scripts', ['js/sensitiveData.js']);
 	}
+
+        public function getList()
+        {
+            $sensitiveData = SensitiveDatum::with('User', 'Tags')->get();
+            return $sensitiveData;
+        }
 
 	/**
 	 * Show the form for creating a new resource.
