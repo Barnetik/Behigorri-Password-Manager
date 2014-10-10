@@ -52,25 +52,89 @@
         return service;
     });
 
-    app.factory('SensitiveDataService', function($rootScope) {
+    app.factory('SensitiveDataService', ['$rootScope', '$http', '$filter', 'baseUrl', function($rootScope, $http, $filter, baseUrl) {
+        var self = this;
+        this.origData = [];
+        this.data = [];
+        this.filterTags = [];
+        this.query = '';
+
+        this.updateData = function() {
+            $rootScope.$broadcast('updateSensitiveDataList', self.data);
+        };
+
         var service = {};
+
+        service.initData = function() {
+            $http.get(baseUrl + '/sensitiveData/list').success(function(data) {
+                self.origData = data;
+                self.data = data;
+                self.updateData();
+            });
+        };
+
+        this.filterData = function() {
+
+            //Tags
+            if (self.filterTags.length === 0) {
+                self.data = self.origData;
+            } else {
+                self.data = $filter('filter')(self.origData, function(value) {
+                    var found = false;
+                    angular.forEach(self.filterTags, function(filterTag) {
+                        angular.forEach(value.tags, function(valueTag) {
+                            if (valueTag.id === filterTag.id) {
+                                found = true;
+                            }
+                        });
+                    });
+                    return found;
+                });
+            }
+
+            //Query
+            if (self.query.trim().length > 0) {
+                self.data = $filter('filter')(self.data, function(value) {
+                    return value.name.toLowerCase().indexOf(self.query.trim().toLowerCase()) >= 0;
+                });
+            }
+
+            self.updateData();
+        };
+
+        service.filterByQuery = function(query) {
+            self.query = query;
+            self.filterData();
+        };
+
+        service.filterByTag = function(tag) {
+            if (tag.filter) {
+                self.filterTags.push(tag);
+            } else {
+                var tagIndex = self.filterTags.indexOf(tag);
+                self.filterTags.splice(tagIndex, 1);
+            }
+            self.filterData();
+        };
+
         service.updateListData = function(sensitiveData) {
             $rootScope.$broadcast('updateListData', sensitiveData);
         };
-        service.filterByQuery = function(query) {
-            $rootScope.$broadcast('filterByQuery', query);
-        };
+
         return service;
-    });
+    }]);
 
     app.controller('TagsController',
-    ['$scope', '$http', 'baseUrl', 'TagFilterService',
-    function($scope, $http, baseUrl, TagFilterService) {
+    ['$scope', '$http', 'baseUrl', 'SensitiveDataService',
+    function($scope, $http, baseUrl, SensitiveDataService) {
         var self = this;
         $scope.tags = [];
 
         this.initData = function() {
             $http.get(baseUrl + '/tags').success(function(data) {
+                angular.forEach(data, function(tag) {
+                    tag.filter = false;
+                });
                 $scope.tags = data;
             });
         };
@@ -81,7 +145,14 @@
         };
 
         $scope.filterSensitiveData = function(tag) {
-            TagFilterService.filterByTag(tag);
+            tag.filter = !tag.filter;
+            if (tag.filter) {
+                tag.labelClass = 'label-primary';
+            } else {
+                tag.labelClass = 'label-default';
+            }
+
+            SensitiveDataService.filterByTag(tag);
         };
 
         $scope.$on('dataDeleted', function() {
@@ -91,21 +162,19 @@
     }]);
 
     app.controller('SensitiveDataListController',
-    ['$scope', '$http',  '$filter', '$element', 'baseUrl', 'PasswordModalService',
-    function($scope, $http, $filter, $element, baseUrl, PasswordModalService) {
+    ['$scope', '$http',  '$filter', '$element', 'baseUrl', 'PasswordModalService', 'SensitiveDataService',
+    function($scope, $http, $filter, $element, baseUrl, PasswordModalService, SensitiveDataService) {
 
         $scope.data = [];
-        $scope.origData = [];
         $scope.filterTags = [];
 
         $($element).find('.js-action-link').tooltip();
-        this.initData = function() {
-            $http.get(baseUrl + '/sensitiveData/list').success(function(data) {
-                $scope.origData = data;
-                $scope.data = data;
-            });
-        };
-        this.initData();
+
+        SensitiveDataService.initData();
+
+        $scope.$on('updateSensitiveDataList', function(event, data) {
+            $scope.data = data;
+        });
 
         $scope.decryptData = function(sensitiveData) {
             PasswordModalService.decryptData(sensitiveData);
@@ -152,44 +221,6 @@
                     $scope.data.splice(key, 1);
                 }
             });
-        });
-
-        $scope.$on('filterByTag', function(event, tag) {
-            var tagIndex = $scope.filterTags.indexOf(tag);
-
-            if (tagIndex >= 0) { // Tag exists, remove from filter
-                $scope.filterTags.splice(tagIndex, 1);
-                tag.labelClass = 'label-default';
-            } else { // New Tag, add to filter
-                $scope.filterTags.push(tag);
-                tag.labelClass = 'label-primary';
-            }
-
-            if ($scope.filterTags.length === 0) {
-                $scope.data = $scope.origData;
-            } else {
-                $scope.data = $filter('filter')($scope.origData, function(value) {
-                    var found = false;
-                    angular.forEach($scope.filterTags, function(filterTag) {
-                        angular.forEach(value.tags, function(valueTag) {
-                            if (valueTag.id === filterTag.id) {
-                                found = true;
-                            }
-                        });
-                    });
-                    return found;
-                });
-            }
-        });
-
-        $scope.$on('filterByQuery', function(event, query) {
-            if (query.trim().length === 0) {
-                $scope.data = $scope.origData;
-            } else {
-                $scope.data = $filter('filter')($scope.origData, function(value) {
-                    return value.name.toLowerCase().indexOf(query.toLowerCase()) >= 0;
-                });
-            }
         });
     }]);
 
