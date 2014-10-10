@@ -80,15 +80,14 @@
                 self.data = self.origData;
             } else {
                 self.data = $filter('filter')(self.origData, function(value) {
-                    var found = false;
-                    angular.forEach(self.filterTags, function(filterTag) {
-                        angular.forEach(value.tags, function(valueTag) {
-                            if (valueTag.id === filterTag.id) {
-                                found = true;
+                    for (var filterIndex in self.filterTags) {
+                        for (var valueIndex in value.tags) {
+                            if (value.tags[valueIndex].id === self.filterTags[filterIndex].id) {
+                                return true;
                             }
-                        });
-                    });
-                    return found;
+                        }
+                    }
+                    return false;
                 });
             }
 
