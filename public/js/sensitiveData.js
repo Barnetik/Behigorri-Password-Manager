@@ -221,6 +221,7 @@
 
         $scope.selectedTab = 'form';
         $scope.show = false;
+        $scope.isSaving = false;
         $scope.sensitiveData = {};
 
         $scope.alertMessage = '';
@@ -275,6 +276,7 @@
         $scope.submitData = function($event) {
             $event.preventDefault();
             $scope.alertMessage = '';
+            $scope.isSaving = true;
             if ($scope.hasFiles()) {
                 fileField.fineUploader('uploadStoredFiles');
             } else {
@@ -288,6 +290,8 @@
                     sensitiveDataService.updateListData(angular.copy($scope.sensitiveData));
                 }).error(function(data) {
                     $scope.alertMessage = data.error.message;
+                }).finally(function(data) {
+                    $scope.isSaving = false;
                 });
             }
         };
