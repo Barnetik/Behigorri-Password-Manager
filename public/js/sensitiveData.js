@@ -189,15 +189,6 @@
 
         $scope.$on('updateListData', function(event, sensitiveData) {
             var found = false;
-            angular.forEach($scope.origData, function(data, key) {
-                if (data.id === sensitiveData.id) {
-                    $scope.origData[key] = sensitiveData;
-                    found = true;
-                }
-            });
-            if (!found) {
-                $scope.origData.push(sensitiveData);
-            }
             angular.forEach($scope.data, function(data, key) {
                 if (data.id === sensitiveData.id) {
                     $scope.data[key] = sensitiveData;
@@ -259,7 +250,7 @@
             passwordModalService.downloadFile($scope.sensitiveData);
         };
 
-        this.hasFiles = function() {
+        $scope.hasFiles = function() {
             return fileField.fineUploader('getUploads').length > 0;
         };
 
