@@ -1,14 +1,14 @@
 (function() {
     var app = angular.module('Behigorri', ['ngTagsInput', 'btford.markdown']);
 
-    app.factory('SessionTimeoutInterceptor', function() {
+    app.factory('SessionTimeoutInterceptor', function($q) {
         var requestInterceptor = {
             responseError: function(responseError) {
                 if (responseError.status === 401) {
                     var baseUrl = angular.element('base').attr('href');
                     window.location = baseUrl + '/login';
                 }
-                return responseError;
+                return $q.reject(responseError);
             }
         };
         return requestInterceptor;
@@ -327,6 +327,7 @@
 
         $scope.alertMessage = '';
         $scope.alertClass = 'alert-warning';
+        $scope.isDecrypting = false;
 
         $scope.checkSubmitable = function(value) {
             if ($scope.password.length > 0) {
@@ -363,6 +364,7 @@
         };
 
         $scope.decrypt = function() {
+            $scope.isDecrypting = true;
             $http.post(
                     baseUrl + '/sensitiveData/decrypt',
                     {
@@ -377,11 +379,13 @@
                 error(function(response){
                     $scope.alertMessage = response.error.message;
                     $scope.alertClass = 'alert-warning';
-                }
-            );
+                }).finally(function() {
+                    $scope.isDecrypting = false;
+                });
         };
 
         $scope.delete = function() {
+            $scope.isDecrypting = true;
             $http.post(
                     baseUrl + '/sensitiveData/delete',
                     {
@@ -396,11 +400,13 @@
                 error(function(response){
                     $scope.alertMessage = response.error.message;
                     $scope.alertClass = 'alert-warning';
-                }
-            );
+                }).finally(function() {
+                    $scope.isDecrypting = false;
+                });
         };
 
         $scope.download = function() {
+            $scope.isDecrypting = true;
             $http.post(
                     baseUrl + '/sensitiveData/decrypt',
                     {
@@ -427,8 +433,9 @@
                 error(function(response){
                     $scope.alertMessage = response.error.message;
                     $scope.alertClass = 'alert-warning';
-                }
-            );
+                }).finally(function() {
+                    $scope.isDecrypting = false;
+                });
         };
 
         $scope.$on('decryptData', function(event, sensitiveData) {

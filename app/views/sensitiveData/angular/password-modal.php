@@ -9,18 +9,20 @@
         </h4>
       </div>
       <form novalidate ng-submit="performAction()">
-        <div class="modal-body">
-            <div ng-show="alertMessage" class="alert alert-warning alert-dismissable">
-                <button data-dismiss="alert" type="button" class="close" aria-hidden>x</button>
-                {{alertMessage}}
-            </div>
-            <input type="hidden" name="id" ng-value="sensitiveData.id"/>
-            <input ng-model="password" ng-change="checkSubmitable()" type="password" name="password" placeholder="password" class="form-control js-password"/>
-        </div>
-        <div class="modal-footer">
-            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
-            <input type="submit" class="btn" ng-class="submitClass" ng-disabled="submitDisabled" value="{{submitText}}" />
-        </div>
+          <fieldset ng-disabled="isDecrypting">
+                <div class="modal-body">
+                    <div ng-show="alertMessage" class="alert alert-warning alert-dismissable">
+                        <button data-dismiss="alert" type="button" class="close" aria-hidden>x</button>
+                        {{alertMessage}}
+                    </div>
+                    <input type="hidden" name="id" ng-value="sensitiveData.id"/>
+                    <input ng-model="password" ng-change="checkSubmitable()" type="password" name="password" placeholder="password" class="form-control js-password"/>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <input type="submit" class="btn" ng-class="submitClass" ng-disabled="submitDisabled" value="{{submitText}}" />
+                </div>
+          </fieldset>
       </form>
     </div><!-- /.modal-content -->
   </div><!-- /.modal-dialog -->
