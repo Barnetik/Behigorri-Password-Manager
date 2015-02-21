@@ -28,7 +28,7 @@ Dependencies
 Installation
 ------------
 
-Nowdays, is not easily installable and usable, but here are some guidelines:
+Nowdays, there are some steps to be taken for a proper installation, here are some guidelines:
 
 Clone the current repository
 
@@ -38,38 +38,12 @@ Install php dependencies
 
   `$ composer install`
 
-Install javascript/css dependencies
-
-  `$ bower install`
-
 Create database and configure it on laravel's database configuration file (app/config/database.php), then migrate:
 
   `$ php artisan migrate`
 
-Create a gpg pub/priv key on app/storage/keys/admin using gpg cli:
+Create a gpg pub/priv key on app/storage/keys/admin using custom artisan command:
 
-  `$ gpg --homedir app/storage/keys/admin --gen-key` 
+  `$ php artisan behigorri:gpg:init` 
 
-And make apache user the folders owner:
-
-  `$ sudo chown www-data:www-data app/storage -R`
-
-Take the gpg key's fingerprint:
-
-  $ gpg --homedir app/storage/keys/admin
-  
-    pub   2048R/F1678C06 2014-06-06
-          Key fingerprint = F6A7 370F 50C9 5303 4BC4  F4F1 7F08 F167 8C06
-
-Remove it's whitespaces:
-
-  `F6A7370F50C953034BC4F4F17F08F1678C06`
-
-And insert it into the roles table:
-
-  `INSERT INTO roles values(1, 500, 'admin', 'F6A7370F50C953034BC4F4F17F08F1678C06');`
-
-
-Easy, wasn't it? :p
-
-We promess to make this better soon, but as stated before, this is still a Work In Progress.
+Configure ldap or you're choice authentication mechanism and you should be ready to go!
