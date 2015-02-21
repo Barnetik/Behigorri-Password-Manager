@@ -96,7 +96,7 @@ return array(
 	|
 	*/
 
-	'cookie' => 'laravel_session',
+	'cookie' => 'behigorri_pm_session',
 
 	/*
 	|--------------------------------------------------------------------------
