@@ -11,8 +11,8 @@
       <form novalidate ng-submit="performAction()">
           <fieldset ng-disabled="isDecrypting">
                 <div class="modal-body">
-                    <div ng-show="alertMessage" class="alert alert-warning alert-dismissable">
-                        <button data-dismiss="alert" type="button" class="close" aria-hidden>x</button>
+                    <div ng-show="alertMessage" class="alert alert-warning alert-dismissible">
+                    <button type="button" class="close" data-dismiss="alert" aria-label="Close"><span aria-hidden="true">&times;</span></button>
                         {{alertMessage}}
                     </div>
                     <input type="hidden" name="id" ng-value="sensitiveData.id"/>

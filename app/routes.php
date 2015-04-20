@@ -21,6 +21,7 @@ Route::group(array('before' => 'auth'), function()
     Route::post('/sensitiveData/download', 'SensitiveDataController@download');
 
     Route::resource('sensitiveData', 'SensitiveDataController');
+    Route::post('sensitiveData', ['as' => 'sensitiveData', 'uses' => 'SensitiveDataController@store']);
 
     Route::get('/logout', 'LogoutController@logout');
     Route::get('/tags', 'TagsController@index');

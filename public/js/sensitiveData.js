@@ -224,7 +224,7 @@
         $scope.isSaving = false;
         $scope.sensitiveData = {};
 
-        $scope.alertMessage = '';
+        $scope.alertMessage = [];
 
         $scope.showArea = function() {
             $scope.show = true;
@@ -262,20 +262,38 @@
             },
             validation: {
                 sizeLimit: 15000000
+            },
+            callbacks: {
+                onError: function(id, name, errorReason, xhr){
+                    fileField.fineUploader('reset');
+                    $scope.$apply(function() {
+                        $scope.alertClass = 'alert-danger';
+                        if (errorReason) {
+                            $scope.alertMessage.push(errorReason);
+                        } else {
+                            $scope.alertMessage.push(xhr.responseText);
+                        }
+                        $scope.isSaving = false;
+                    });
+                },
+                onSuccess: function() {
+                    debugger;
+                }
             }
-        }).on('error', function(event, id, name, response, xhr){
-            $scope.alertMessage = response.error.message;
-            fileField.fineUploader('reset');
-        }).on('complete', function(event, id, name, data) {
-            fileField.fineUploader('reset');
-            $scope.sensitiveData.id = data.id;
-            // We resubmit the form to set the tags.
-            $scope.submitData(event);
+        }).on('complete', function(event, id, name, data, xhr) {
+            if (data.success) {
+                fileField.fineUploader('reset');
+                $scope.sensitiveData.id = data.id;
+                
+                // We resubmit the form to set the tags.
+                $scope.submitData(event);
+            }
         });
 
         $scope.submitData = function($event) {
             $event.preventDefault();
-            $scope.alertMessage = '';
+            $scope.alertMessage = [];
+            $scope.alertClass = 'alert-success';
             $scope.isSaving = true;
             if ($scope.hasFiles()) {
                 fileField.fineUploader('uploadStoredFiles');
@@ -288,8 +306,10 @@
                     $scope.sensitiveData = data;
                     $scope.sensitiveData.value = value;
                     sensitiveDataService.updateListData(angular.copy($scope.sensitiveData));
+                    $scope.alertMessage.push('Data uploaded');
                 }).error(function(data) {
-                    $scope.alertMessage = data.error.message;
+                    $scope.alertMessage.push(data.error.message);
+                    $scope.alertClass = 'alert-error';
                 }).finally(function(data) {
                     $scope.isSaving = false;
                 });
@@ -325,7 +345,7 @@
         $scope.password = '';
         $scope.sensitiveData = {};
 
-        $scope.alertMessage = '';
+        $scope.alertMessage = [];
         $scope.alertClass = 'alert-warning';
         $scope.isDecrypting = false;
 
@@ -342,7 +362,7 @@
             $scope.$el.on('shown.bs.modal', function() {
                 $scope.$el.find('input.js-password').focus();
             });
-            $scope.alertMessage = '';
+            $scope.alertMessage = [];
             };
 
         $scope.hide = function() {
@@ -377,7 +397,7 @@
                     $scope.hide();
                 }).
                 error(function(response){
-                    $scope.alertMessage = response.error.message;
+                    $scope.alertMessage.push(response.error.message);
                     $scope.alertClass = 'alert-warning';
                 }).finally(function() {
                     $scope.isDecrypting = false;
@@ -398,7 +418,7 @@
                     $scope.hide();
                 }).
                 error(function(response){
-                    $scope.alertMessage = response.error.message;
+                    $scope.alertMessage.push(response.error.message);
                     $scope.alertClass = 'alert-warning';
                 }).finally(function() {
                     $scope.isDecrypting = false;
@@ -431,7 +451,7 @@
                     $scope.hide();
                 }).
                 error(function(response){
-                    $scope.alertMessage = response.error.message;
+                    $scope.alertMessage.push(response.error.message);
                     $scope.alertClass = 'alert-warning';
                 }).finally(function() {
                     $scope.isDecrypting = false;
